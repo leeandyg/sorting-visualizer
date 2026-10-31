@@ -1,10 +1,11 @@
 .app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 16px 48px;
+  /* Bottom padding leaves room for the fixed playback bar. */
+  padding: 20px 16px 96px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
 }
 
 .app-header {
@@ -48,12 +49,7 @@
 
 .app-header h1 {
   margin: 0;
-  font-size: 28px;
-}
-
-.app-header p {
-  margin: 4px 0 0;
-  color: var(--muted);
+  font-size: 24px;
 }
 
 /* Input panel */
@@ -73,8 +69,7 @@
   color: var(--muted);
 }
 
-.field select,
-.array-field input {
+.field select {
   height: 40px;
   padding: 0 10px;
   border: 1px solid var(--border);
@@ -87,13 +82,6 @@
   flex: 1 1 260px;
 }
 
-.array-field input {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-}
-
-.array-field input[aria-invalid='true'] {
-  border-color: var(--error);
-}
 
 /* Slider, size and Generate share one box, since the size only matters for generating. */
 .random-group {
@@ -122,14 +110,14 @@
 /* Gray when pressing it would just regenerate what's loaded; white ("ready") once the size or
    kind has changed or a different array is loaded. It's clickable either way. */
 .button.generate {
-  background: var(--surface);
-  color: var(--muted);
+  background: var(--idle-bg);
+  color: var(--idle-text);
 }
 
 .button.generate.is-ready {
   background: var(--ready-bg);
   border-color: var(--border-strong);
-  color: var(--text);
+  color: var(--ready-text);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 }
 
@@ -258,12 +246,92 @@
   min-width: 0;
 }
 
-.stage-body > .code-panel {
-  padding-top: 16px;
+.stage-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding-top: 12px;
+}
+
+.stage-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.stage-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage-title h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.stage-variant {
+  position: relative;
+  padding: 1px 8px;
+  border: 1px solid var(--chip-border);
+  border-radius: 999px;
+  background: var(--chip-bg);
+  font-size: 13px;
+  color: var(--muted);
+  cursor: help;
+}
+
+/* Explains why quick sort has two variants; shown on hover or keyboard focus. */
+.variant-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: 280px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 13px;
+  line-height: 1.45;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 120ms;
+  pointer-events: none;
+}
+
+.stage-variant:hover .variant-tip,
+.stage-variant:focus-visible .variant-tip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Small "?" next to the title: scrolls down to the About card. */
+.about-button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.about-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .narration {
-  min-height: 96px;
+  min-height: 72px;
   margin: 4px 0 12px;
 }
 
@@ -348,6 +416,20 @@
   margin-top: 4px;
 }
 
+/* Playback is a bar fixed to the bottom of the window (like a music player), so it never moves
+   while steps play and the text above changes length. Its content lines up with the page column. */
+.app > .player-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 10px max(16px, calc((100vw - 1200px) / 2 + 16px)) calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 -4px 12px rgb(0 0 0 / 0.04);
+}
+
 .counters {
   display: flex;
   gap: 24px;
@@ -375,18 +457,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* Keep playback reachable while scrolling down to the code on narrow screens. */
-  .app > .player-controls {
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
-    margin: 0 -16px;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--border);
-    background: var(--bg);
-  }
-
-  .stage-body > .code-panel {
+  .stage-side {
     padding-top: 0;
   }
 }
@@ -400,7 +471,21 @@
     font-size: 16px;
   }
 
-  .counters {
+  /* Playback is a bar fixed to the bottom of the window (like a music player), so it never moves
+   while steps play and the text above changes length. Its content lines up with the page column. */
+.app > .player-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 10px max(16px, calc((100vw - 1200px) / 2 + 16px)) calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow: 0 -4px 12px rgb(0 0 0 / 0.04);
+}
+
+.counters {
     gap: 16px;
   }
 }

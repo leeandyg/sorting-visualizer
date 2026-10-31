@@ -10,7 +10,9 @@ export function InfoCard({ algorithm, level }: { algorithm: SortAlgorithm; level
   const yesNo = (value: boolean) => (value ? 'Yes' : 'No')
   return (
     <section className="info-card" aria-labelledby="info-title">
-      <h2 id="info-title">About {name}</h2>
+      <h2 id="info-title" tabIndex={-1}>
+        About {name}
+      </h2>
       <p className="info-idea">{facts.idea}</p>
 
       <dl className="info-stats">

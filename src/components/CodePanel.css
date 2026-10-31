@@ -14,9 +14,11 @@
 }
 
 .code {
+  position: relative;
+  max-height: 340px;
   margin: 0 0 8px;
   padding: 8px 0;
-  overflow-x: auto;
+  overflow: auto;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);

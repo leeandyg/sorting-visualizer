@@ -1,0 +1,122 @@
+.array-input {
+  position: relative;
+}
+
+.array-input input {
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+}
+
+.array-input input.has-expand {
+  padding-right: 40px;
+}
+
+.array-input input[aria-invalid='true'],
+.array-editor textarea[aria-invalid='true'] {
+  border-color: var(--error);
+}
+
+.expand-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.expand-button:hover {
+  color: var(--text);
+}
+
+.expand-button:hover .array-tip,
+.expand-button:focus-visible .array-tip,
+.expand-button.show-tip .array-tip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* A small flag under the expand button, pointing up at it. */
+.array-tip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -6px;
+  z-index: 10;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.array-tip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  right: 14px;
+  border: 6px solid transparent;
+  border-bottom-color: var(--text);
+}
+
+.array-tip kbd,
+.array-editor-hint kbd {
+  padding: 0 4px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  background: rgb(127 127 127 / 0.3);
+}
+
+/* The expanded editor opens over the field, so nothing on the page moves. */
+.array-editor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  border-radius: 8px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+.array-editor textarea {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 8px 8px 0 0;
+  background: var(--bg);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.array-editor-hint {
+  padding: 4px 10px;
+  border: 1px solid var(--accent);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background: var(--surface);
+  font-size: 12px;
+  color: var(--muted);
+}

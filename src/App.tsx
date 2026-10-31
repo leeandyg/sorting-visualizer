@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { algorithmFamilies, algorithms } from './algorithms'
+import { ArrayInput } from './components/ArrayInput'
 import { ArrayView } from './components/ArrayView'
 import { CodePanel } from './components/CodePanel'
 import { InfoCard } from './components/InfoCard'
@@ -11,7 +12,7 @@ import type { AlgorithmId, MarkKind, SortEvent, Trace } from './engine/types'
 import { generate, SHAPES, type Shape } from './input/generate'
 import { parseArray } from './input/parseArray'
 import { narrate, type Level } from './narration'
-import { usePlayer, type Player } from './player/usePlayer'
+import { nextSpeed, usePlayer, type Player } from './player/usePlayer'
 import { readUrlState, urlFor } from './settings/urlState'
 import { useStoredChoice } from './settings/useStoredChoice'
 import { useTheme, type ThemeChoice } from './theme/theme'
@@ -42,12 +43,12 @@ function App() {
   const family = algorithmFamilies.find((f) => f.variants.includes(algorithm))!
   const tags = useMemo(() => duplicateTags(input), [input])
   const hasAux = useMemo(() => trace.frames.some((f) => f.aux.length > 0), [trace])
+  const hasLift = useMemo(() => trace.frames.some((f) => f.step?.type === 'lift'), [trace])
   const pointers = algorithm.pointers.flatMap((p) => {
     const index = p.at(frame.vars)
     return index !== undefined && index >= 0 && index < input.length ? [{ label: p.label, index }] : []
   })
 
-  useKeyboardShortcuts(player, trace.frames.length)
 
   // Keep the address bar pointing at the current algorithm and array, so a refresh or a copied URL keeps them.
   useEffect(() => {
@@ -66,12 +67,22 @@ function App() {
     window.setTimeout(() => setShareNote(null), 2500)
   }
 
+  const showAbout = () => {
+    const card = document.getElementById('info-title')
+    card?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    card?.focus({ preventScroll: true })
+  }
+
   // Generate always makes a fresh array; this only decides whether its button looks "ready" (something would change).
   const generateReady =
     !generated || generated.size !== size || generated.shape !== shape || generated.values.join() !== input.join()
 
-  const run = (e: FormEvent) => {
-    e.preventDefault()
+  const run = (e?: FormEvent) => {
+    e?.preventDefault()
+    // Leave the text field, so Space pauses instead of typing a space into the array.
+    if (document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'text') {
+      document.activeElement.blur()
+    }
     const parsed = parseArray(text)
     if (parsed.error !== undefined) {
       setError(parsed.error)
@@ -81,6 +92,8 @@ function App() {
     setInput(parsed.values)
     player.reset(true)
   }
+
+  useKeyboardShortcuts(player, trace.frames.length, run)
 
   const randomize = () => {
     const values = generate(shape, size)
@@ -102,10 +115,7 @@ function App() {
   return (
     <main className="app">
       <header className="app-header">
-        <div>
-          <h1>Sorting Visualizer</h1>
-          <p>Watch sorting algorithms work, one step at a time.</p>
-        </div>
+        <h1>Sorting Visualizer</h1>
         <ThemeSwitcher choice={theme.choice} onChange={theme.setChoice} />
       </header>
 
@@ -142,17 +152,15 @@ function App() {
           </div>
         )}
 
-        <label className="field array-field">
+        <div className="field array-field">
           <span>Array</span>
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            spellCheck={false}
-            aria-invalid={error !== null}
-            aria-describedby={error ? 'input-error' : undefined}
+          <ArrayInput
+            text={text}
+            onChange={setText}
+            invalid={error !== null}
+            describedBy={error ? 'input-error' : undefined}
           />
-        </label>
+        </div>
 
         <button type="submit" className="button primary">
           Run
@@ -197,6 +205,29 @@ function App() {
 
       <section className="stage">
         <div className="stage-top">
+          <div className="stage-title">
+            <div className="stage-title-line">
+              <h2>{family.name}</h2>
+              <button
+                type="button"
+                className="about-button"
+                onClick={showAbout}
+                aria-label={`About ${family.name.toLowerCase()}`}
+                title={`About ${family.name.toLowerCase()}`}
+              >
+                ?
+              </button>
+            </div>
+            {/* Under the name, so the "?" clearly belongs to the algorithm rather than the variant. */}
+            {family.variants.length > 1 && (
+              <span className="stage-variant" tabIndex={0} aria-describedby="variant-tip">
+                {algorithm.family!.variant}
+                <span id="variant-tip" role="tooltip" className="variant-tip">
+                  Lomuto and Hoare are two partition schemes: two ways to do quick sort's splitting step.
+                </span>
+              </span>
+            )}
+          </div>
           <Legend trace={trace} />
           <div className="stage-actions">
             <div className="segmented" role="group" aria-label="Explanation detail">
@@ -224,7 +255,13 @@ function App() {
               pointers={pointers}
               tags={tags}
               hasAux={hasAux}
+              hasLift={hasLift}
             />
+
+            <div className={`narration level-${level}`} aria-live={player.playing ? 'off' : 'polite'}>
+              {narration.phase && <p className="narration-phase">{narration.phase}</p>}
+              <p className="narration-text">{narration.text}</p>
+            </div>
 
             {algorithm.treeView && (
               <div className="tree-section">
@@ -232,12 +269,10 @@ function App() {
                 <HeapTree frame={frame} tags={tags} moveMs={moveMs} />
               </div>
             )}
+          </div>
 
-            <div className={`narration level-${level}`} aria-live={player.playing ? 'off' : 'polite'}>
-              {narration.phase && <p className="narration-phase">{narration.phase}</p>}
-              <p className="narration-text">{narration.text}</p>
-            </div>
-
+          <div className="stage-side">
+            <CodePanel code={algorithm.code} frame={frame} prev={trace.frames[player.index - 1] ?? null} />
             <dl className="counters">
               <div>
                 <dt>Comparisons</dt>
@@ -253,8 +288,6 @@ function App() {
               </div>
             </dl>
           </div>
-
-          <CodePanel code={algorithm.code} frame={frame} prev={trace.frames[player.index - 1] ?? null} />
         </div>
       </section>
 
@@ -388,9 +421,25 @@ function ThemeSwitcher({ choice, onChange }: { choice: ThemeChoice; onChange: (c
   )
 }
 
-/** Space: play/pause, ←/→: step, Home/End: jump. Ignored while typing in a field. */
-function useKeyboardShortcuts(player: Player, frameCount: number) {
+/** Space: play/pause, Enter: run, ←/→: step (Shift: 5 steps), Q: start, E: end, −/=: slower/faster. Ignored while typing in a field. */
+function useKeyboardShortcuts(player: Player, frameCount: number, run: () => void) {
+  // Which element got focus from a click: the last interaction before the focus change was a
+  // pointer press rather than a key (like Tab). Browsers mark even clicked buttons :focus-visible
+  // once a key is pressed, so track it here. Refs, because the listeners are re-attached every render.
+  const lastInput = useRef<'pointer' | 'key'>('key')
+  const clickFocused = useRef<EventTarget | null>(null)
+
   useEffect(() => {
+    const onPointerDown = () => {
+      lastInput.current = 'pointer'
+    }
+    const onAnyKey = () => {
+      lastInput.current = 'key'
+    }
+    const onFocusIn = (e: FocusEvent) => {
+      clickFocused.current = lastInput.current === 'pointer' ? e.target : null
+    }
+
     const isField = (target: EventTarget | null) =>
       target instanceof HTMLElement && target.matches('input:not([type=range]), select, textarea')
 
@@ -403,15 +452,41 @@ function useKeyboardShortcuts(player: Player, frameCount: number) {
           e.preventDefault()
           player.toggle()
           break
+        case 'Enter': {
+          // Shift+Enter expands the array editor (ArrayInput). A button reached with the keyboard
+          // (Tab) keeps Enter for itself; one that only has focus because it was clicked doesn't.
+          const keyboardFocused =
+            e.target instanceof HTMLElement && e.target.matches('button, a') && e.target !== clickFocused.current
+          if (e.shiftKey || keyboardFocused) return
+          e.preventDefault()
+          run()
+          break
+        }
         case 'ArrowLeft':
-        case 'ArrowRight':
-        case 'Home':
-        case 'End':
+        case 'ArrowRight': {
           if (onSlider) return
           e.preventDefault()
-          if (e.key === 'ArrowLeft') player.stepBack()
-          else if (e.key === 'ArrowRight') player.stepForward()
-          else player.seek(e.key === 'Home' ? 0 : frameCount - 1)
+          // Shift skips 5 steps at a time.
+          const by = (e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 5 : 1)
+          player.seek(player.index + by)
+          break
+        }
+        case 'q':
+        case 'Q':
+          e.preventDefault()
+          player.seek(0)
+          break
+        case 'e':
+        case 'E':
+          e.preventDefault()
+          player.seek(frameCount - 1)
+          break
+        case '-':
+        case '_':
+        case '=':
+        case '+':
+          e.preventDefault()
+          player.setSpeed(nextSpeed(player.speed, e.key === '=' || e.key === '+' ? 1 : -1))
           break
       }
     }
@@ -422,11 +497,17 @@ function useKeyboardShortcuts(player: Player, frameCount: number) {
 
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('pointerdown', onPointerDown, true)
+    window.addEventListener('keydown', onAnyKey, true)
+    window.addEventListener('focusin', onFocusIn)
     return () => {
+      window.removeEventListener('keydown', onAnyKey, true)
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('pointerdown', onPointerDown, true)
+      window.removeEventListener('focusin', onFocusIn)
     }
-  }, [player, frameCount])
+  }, [player, frameCount, run])
 }
 
 export default App

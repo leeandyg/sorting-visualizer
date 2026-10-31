@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import type { CodeLine, Frame, Vars } from '../engine/types'
 import './CodePanel.css'
 
@@ -11,10 +11,24 @@ interface Props {
 /** The Python listing with the current step's line(s) highlighted, and the loop variables below it. */
 export function CodePanel({ code, frame, prev }: Props) {
   const active = frame.step?.line
+  const codeRef = useRef<HTMLPreElement>(null)
+
+  // Long listings scroll inside the panel; keep the highlighted lines in view as the step changes.
+  useEffect(() => {
+    const box = codeRef.current
+    const lines = box?.querySelectorAll<HTMLElement>('.code-line.is-active')
+    if (!box || !lines?.length) return
+    const top = lines[0].offsetTop
+    const bottom = lines[lines.length - 1].offsetTop + lines[lines.length - 1].offsetHeight
+    if (top < box.scrollTop || bottom > box.scrollTop + box.clientHeight) {
+      box.scrollTop = Math.max(0, (top + bottom) / 2 - box.clientHeight / 2)
+    }
+  }, [active, code])
+
   return (
     <div className="code-panel">
       <div className="panel-title">Python</div>
-      <pre className="code">
+      <pre className="code" ref={codeRef}>
         <code>
           {code.map((line, k) => (
             <div key={k} className={active && line.keys.includes(active) ? 'code-line is-active' : 'code-line'}>

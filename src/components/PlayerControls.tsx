@@ -17,16 +17,16 @@ export function PlayerControls({ player, frameCount }: Props) {
   return (
     <div className="player-controls">
       <div className="transport">
-        <IconButton label="Go to start (Home)" onClick={() => player.seek(0)} icon="start" />
-        <IconButton label="Step back (←)" onClick={player.stepBack} icon="back" />
+        <IconButton label="Go to start (Q)" onClick={() => player.seek(0)} icon="start" />
+        <IconButton label="Step back (←, Shift+← for 5)" onClick={player.stepBack} icon="back" />
         <IconButton
           label={player.playing ? 'Pause (Space)' : 'Play (Space)'}
           onClick={player.toggle}
           icon={player.playing ? 'pause' : 'play'}
           primary
         />
-        <IconButton label="Step forward (→)" onClick={player.stepForward} icon="forward" />
-        <IconButton label="Go to end (End)" onClick={() => player.seek(last)} icon="end" />
+        <IconButton label="Step forward (→, Shift+→ for 5)" onClick={player.stepForward} icon="forward" />
+        <IconButton label="Go to end (E)" onClick={() => player.seek(last)} icon="end" />
       </div>
 
       <div className="scrub">
@@ -43,7 +43,7 @@ export function PlayerControls({ player, frameCount }: Props) {
         </span>
       </div>
 
-      <label className="speed">
+      <label className="speed" title="Slower / faster: − and =">
         <span>Speed</span>
         <input
           type="range"

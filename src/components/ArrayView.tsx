@@ -24,11 +24,13 @@ interface Props {
   tags: Map<number, string>
   /** Reserve the second row for temporary arrays (merge sort), even while it's empty. */
   hasAux: boolean
+  /** Leave room above the bars for a lifted element (insertion sort's key). */
+  hasLift: boolean
 }
 
 type Row = 'main' | 'held' | 'aux'
 
-export function ArrayView({ frame, maxValue, moveMs, pointers, tags, hasAux }: Props) {
+export function ArrayView({ frame, maxValue, moveMs, pointers, tags, hasAux, hasLift }: Props) {
   const n = frame.items.length
   const roles = rolesById(frame)
   const marks = new Map(frame.marks.map((m) => [m.id, m.kind]))
@@ -97,6 +99,7 @@ export function ArrayView({ frame, maxValue, moveMs, pointers, tags, hasAux }: P
   const classes = ['array-view']
   if (!showValues) classes.push('compact')
   if (hasAux) classes.push('has-aux')
+  if (hasLift) classes.push('has-lift')
 
   return (
     <div

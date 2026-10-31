@@ -54,19 +54,19 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
   'quick-lomuto': {
     idea: 'Pick a pivot, move smaller values to its left and bigger ones to its right, then sort each side the same way. Lomuto uses the last element as the pivot.',
     time: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)' },
-    space: 'O(log n) on average, for the recursion',
+    space: 'O(log n)',
     inPlace: true,
     adaptive: false,
-    cases: 'Fast when pivots split the array roughly in half. With the last element as pivot, already sorted input is the worst case: every partition peels off just one element. Try the "Sorted" preset.',
+    cases: 'Fast when pivots split the array roughly in half. With the last element as pivot, already sorted input is the worst case: every partition peels off just one element. Try the "Sorted" preset. The O(log n) extra space is the recursion stack (on average; O(n) in the worst case).',
     usedFor: 'Quicksort is the basis of many standard library sorts (like C++ std::sort, via introsort). Real implementations pick pivots more carefully, such as median-of-three or random.',
   },
   'quick-hoare': {
     idea: "Pick a pivot, then scan from both ends toward the middle, swapping pairs that are on the wrong side. Sort each part the same way. Hoare's scheme uses the middle element's value as the pivot.",
     time: { best: 'O(n log n)', average: 'O(n log n)', worst: 'O(n²)' },
-    space: 'O(log n) on average, for the recursion',
+    space: 'O(log n)',
     inPlace: true,
     adaptive: false,
-    cases: 'Fast when pivots split the array roughly in half. The middle pivot handles sorted input well, but carefully crafted inputs can still force O(n²). It does about three times fewer swaps than Lomuto on average.',
+    cases: 'Fast when pivots split the array roughly in half. The middle pivot handles sorted input well, but carefully crafted inputs can still force O(n²). It does about three times fewer swaps than Lomuto on average. The O(log n) extra space is the recursion stack (on average).',
     usedFor: "Hoare's original 1961 scheme. Production quicksorts use a refined version of this two-pointer partition.",
   },
   heap: {

@@ -2,6 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 export const MIN_SPEED = 0.5
 export const MAX_SPEED = 100
+/** Round speeds the − / = keys step through: about ×1.4 apart, so evenly spaced on the log slider. */
+export const SPEED_STEPS = [0.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 25, 35, 50, 75, 100]
+
+/** The next round speed above (or below) the current one, which may be an in-between slider value. */
+export function nextSpeed(speed: number, direction: 1 | -1): number {
+  if (direction === 1) return SPEED_STEPS.find((s) => s > speed + 1e-9) ?? MAX_SPEED
+  return [...SPEED_STEPS].reverse().find((s) => s < speed - 1e-9) ?? MIN_SPEED
+}
 
 /**
  * Steps through `frameCount` frames like a video player. Speed is in steps per second;
