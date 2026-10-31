@@ -1,21 +1,48 @@
 :root {
   --bg: #ffffff;
+  --surface: #f6f7f9;
+  --border: #e3e5e8;
+  --border-strong: #b9bec7;
   --text: #1a1a1a;
   --muted: #6b6b6b;
   --accent: #3b6fe0;
+  --on-accent: #ffffff;
+  --error: #c4321b;
 
-  color-scheme: light dark;
+  /* Element states. Keep these distinct in hue and lightness for colorblind users. */
+  --bar: #c3c9d4;
+  --compare: #e5a50a;
+  --swap: #e0563b;
+  --held: #7a5af5;
+  --sorted: #2f9e5b;
+  --inspect-filter: brightness(0.8);
+
+  color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121316;
-    --text: #e8e8ea;
-    --muted: #9a9aa2;
-    --accent: #7b9ef0;
-  }
+/* The theme is chosen by src/theme (system setting unless overridden) and set as data-theme on <html>. */
+:root[data-theme='dark'] {
+  --bg: #121316;
+  --surface: #1b1d21;
+  --border: #2c2f35;
+  --border-strong: #4a4f58;
+  --text: #e8e8ea;
+  --muted: #9a9aa2;
+  --accent: #7b9ef0;
+  --on-accent: #10131a;
+  --error: #ff8a73;
+
+  --bar: #4a505c;
+  --compare: #f0b429;
+  --swap: #ff7a5c;
+  --held: #a38bff;
+  --sorted: #3fbf74;
+  /* Bars are dark on a dark background, so inspecting lightens them to stand out instead. */
+  --inspect-filter: brightness(1.35);
+
+  color-scheme: dark;
 }
 
 * {
@@ -28,12 +55,14 @@ body {
   color: var(--text);
 }
 
-.app {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 48px 16px;
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
 }
 
-.app p {
-  color: var(--muted);
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }

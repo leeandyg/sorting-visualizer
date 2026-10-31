@@ -5,6 +5,17 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sorting Visualizer</title>
+    <script>
+      // Apply the theme before first paint so an overridden page doesn't flash. Mirrors src/theme/theme.ts.
+      ;(function () {
+        var system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        var choice = null
+        try {
+          choice = localStorage.getItem('theme')
+        } catch (e) {}
+        document.documentElement.dataset.theme = choice === 'light' || choice === 'dark' ? choice : system
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

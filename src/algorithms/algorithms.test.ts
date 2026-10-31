@@ -1,0 +1,90 @@
+import { describe, expect, it } from 'vitest'
+import { record } from '../engine/record'
+import { algorithmList, algorithms } from '.'
+
+/** Small seeded PRNG so failures are reproducible. */
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+const rand = mulberry32(42)
+const randomArray = (n: number, maxValue: number) =>
+  Array.from({ length: n }, () => Math.floor(rand() * maxValue))
+
+const cases: number[][] = [
+  [],
+  [7],
+  [2, 1],
+  [1, 2, 3, 4, 5],
+  [5, 4, 3, 2, 1],
+  [3, 3, 3, 3],
+  [5, 1, 4, 1, 5, 9, 2, 6, 5, 3],
+  ...Array.from({ length: 100 }, () => randomArray(1 + Math.floor(rand() * 40), 100)),
+  // few unique values, to exercise duplicates
+  ...Array.from({ length: 50 }, () => randomArray(1 + Math.floor(rand() * 40), 4)),
+]
+
+describe.each(algorithmList)('$name', (algorithm) => {
+  it('sorts every case and the trace replays to the same result', () => {
+    for (const input of cases) {
+      const trace = record(algorithm, input)
+      const expected = [...input].sort((x, y) => x - y)
+      expect(trace.output).toEqual(expected)
+
+      const last = trace.frames.at(-1)!
+      expect(last.items.map((item) => item?.value)).toEqual(expected)
+      expect(last.held).toBeNull()
+      expect(last.sorted.every(Boolean)).toBe(true)
+    }
+  })
+
+  it('is stable: equal values keep their original order', () => {
+    for (const input of cases) {
+      const last = record(algorithm, input).frames.at(-1)!
+      const items = last.items.map((item) => item!)
+      for (let k = 1; k < items.length; k++) {
+        if (items[k - 1].value === items[k].value) {
+          expect(items[k - 1].id).toBeLessThan(items[k].id)
+        }
+      }
+    }
+  })
+
+  it('never marks a position sorted before it holds its final value', () => {
+    for (const input of cases) {
+      const trace = record(algorithm, input)
+      for (const frame of trace.frames) {
+        frame.sorted.forEach((isSorted, k) => {
+          if (isSorted) expect(frame.items[k]?.value).toBe(trace.output[k])
+        })
+      }
+    }
+  })
+})
+
+const countersFor = (id: keyof typeof algorithms, input: number[]) =>
+  record(algorithms[id], input).frames.at(-1)!.counters
+
+describe('counters match the code', () => {
+  it('bubble sort: reversed input does every comparison and swap', () => {
+    expect(countersFor('bubble', [6, 5, 4, 3, 2, 1])).toEqual({ comparisons: 15, swaps: 15, writes: 30 })
+  })
+
+  it('bubble sort: sorted input stops after one pass', () => {
+    expect(countersFor('bubble', [1, 2, 3, 4, 5, 6])).toEqual({ comparisons: 5, swaps: 0, writes: 0 })
+  })
+
+  it('insertion sort: sorted input does one comparison and one write per element', () => {
+    expect(countersFor('insertion', [1, 2, 3, 4, 5, 6])).toEqual({ comparisons: 5, swaps: 0, writes: 5 })
+  })
+
+  it('insertion sort: reversed input shifts every pair, plus one write per key', () => {
+    expect(countersFor('insertion', [6, 5, 4, 3, 2, 1])).toEqual({ comparisons: 15, swaps: 0, writes: 20 })
+  })
+})
