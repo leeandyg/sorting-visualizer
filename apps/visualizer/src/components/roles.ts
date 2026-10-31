@@ -1,4 +1,4 @@
-import type { Frame } from '../engine/types'
+import type { Frame } from '@sortviz/core'
 
 export type Role = 'compare' | 'swap' | 'write'
 

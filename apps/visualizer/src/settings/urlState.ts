@@ -1,6 +1,4 @@
-import { algorithms } from '../algorithms'
-import type { AlgorithmId } from '../engine/types'
-import { parseArray } from '../input/parseArray'
+import { type AlgorithmId, algorithms, parseArray } from '@sortviz/core'
 
 export interface UrlState {
   algorithm?: AlgorithmId

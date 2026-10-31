@@ -1,0 +1,11 @@
+{
+  "name": "@sortviz/core",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Sorting algorithms that record their steps, plus narration, code listings and sound for them. No UI.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "sideEffects": false
+}

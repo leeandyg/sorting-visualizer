@@ -1,11 +1,9 @@
-import { info } from '../algorithms/info'
-import type { SortAlgorithm } from '../engine/types'
-import type { Level } from '../narration'
+import { algorithmInfo, type Level, type SortAlgorithm } from '@sortviz/core'
 import './InfoCard.css'
 
 /** Facts about the selected algorithm: complexity, properties, and where it's used. */
 export function InfoCard({ algorithm, level }: { algorithm: SortAlgorithm; level: Level }) {
-  const facts = info[algorithm.id]
+  const facts = algorithmInfo[algorithm.id]
   const name = algorithm.family ? `${algorithm.family.name} (${algorithm.family.variant} partition)` : algorithm.name
   const yesNo = (value: boolean) => (value ? 'Yes' : 'No')
   return (

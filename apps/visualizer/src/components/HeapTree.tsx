@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { Frame } from '../engine/types'
+import type { Frame } from '@sortviz/core'
 import { rolesById } from './roles'
 import './HeapTree.css'
 

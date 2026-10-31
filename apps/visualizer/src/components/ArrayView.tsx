@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState, type CSSProperties, type PointerEvent, type ReactNode } from 'react'
-import type { Frame, Item } from '../engine/types'
+import type { Frame, Item } from '@sortviz/core'
 import { rolesById } from './roles'
 import './ArrayView.css'
 

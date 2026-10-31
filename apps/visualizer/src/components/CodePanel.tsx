@@ -1,6 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { ident, LANGS, literal, type Lang } from '../engine/lang'
-import type { CodeLine, Frame, Vars } from '../engine/types'
+import { type CodeLine, type Frame, ident, type Lang, LANGS, literal, type Vars } from '@sortviz/core'
 import './CodePanel.css'
 
 interface Props {
