@@ -15,6 +15,7 @@
   --swap: #e0563b;
   --held: #7a5af5;
   --sorted: #2f9e5b;
+  --mark: #d6336c;
   --inspect-filter: brightness(0.8);
 
   --code-active: #e8eefc;
@@ -44,6 +45,7 @@
   --swap: #ff7a5c;
   --held: #a38bff;
   --sorted: #3fbf74;
+  --mark: #f06595;
   /* Bars are dark on a dark background, so inspecting lightens them to stand out instead. */
   --inspect-filter: brightness(1.35);
 

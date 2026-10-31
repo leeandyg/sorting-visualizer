@@ -292,6 +292,23 @@
   background: var(--sorted);
 }
 
+.swatch-mark {
+  background: var(--mark);
+}
+
+.swatch-ghost {
+  border: 1.5px dashed var(--border-strong);
+}
+
+.variant-picker {
+  height: 40px;
+  align-items: center;
+}
+
+.tree-section {
+  margin-top: 4px;
+}
+
 .counters {
   display: flex;
   gap: 24px;

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { algorithmList, algorithms } from './algorithms'
+import { algorithmFamilies, algorithms } from './algorithms'
 import { ArrayView } from './components/ArrayView'
 import { CodePanel } from './components/CodePanel'
+import { HeapTree } from './components/HeapTree'
 import { PlayerControls } from './components/PlayerControls'
 import { MAX_SIZE, record } from './engine/record'
-import type { AlgorithmId, SortEvent, Trace } from './engine/types'
+import { duplicateTags } from './engine/tags'
+import type { AlgorithmId, MarkKind, SortEvent, Trace } from './engine/types'
 import { parseArray, randomArray } from './input/parseArray'
 import { narrate, type Level } from './narration'
 import { usePlayer, type Player } from './player/usePlayer'
@@ -28,6 +30,9 @@ function App() {
   const frame = trace.frames[player.index]
   const algorithm = algorithms[algorithmId]
   const narration = narrate(trace, player.index, level)
+  const family = algorithmFamilies.find((f) => f.variants.includes(algorithm))!
+  const tags = useMemo(() => duplicateTags(input), [input])
+  const hasAux = useMemo(() => trace.frames.some((f) => f.aux.length > 0), [trace])
   const pointers = algorithm.pointers.flatMap((p) => {
     const index = p.at(frame.vars)
     return index !== undefined && index >= 0 && index < input.length ? [{ label: p.label, index }] : []
@@ -76,14 +81,35 @@ function App() {
       <form className="input-panel" onSubmit={run}>
         <label className="field">
           <span>Algorithm</span>
-          <select value={algorithmId} onChange={(e) => chooseAlgorithm(e.target.value as AlgorithmId)}>
-            {algorithmList.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
+          <select
+            value={family.id}
+            onChange={(e) => chooseAlgorithm(algorithmFamilies.find((f) => f.id === e.target.value)!.variants[0].id)}
+          >
+            {algorithmFamilies.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
               </option>
             ))}
           </select>
         </label>
+
+        {family.variants.length > 1 && (
+          <div className="field">
+            <span>Partition</span>
+            <div className="segmented variant-picker" role="group" aria-label="Partition scheme">
+              {family.variants.map((variant) => (
+                <button
+                  key={variant.id}
+                  type="button"
+                  aria-pressed={variant.id === algorithmId}
+                  onClick={() => chooseAlgorithm(variant.id)}
+                >
+                  {variant.family!.variant}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <label className="field array-field">
           <span>Array</span>
@@ -140,7 +166,21 @@ function App() {
 
         <div className="stage-body">
           <div className="stage-main">
-            <ArrayView frame={frame} maxValue={Math.max(...input, 1)} moveMs={moveMs} pointers={pointers} />
+            <ArrayView
+              frame={frame}
+              maxValue={Math.max(...input, 1)}
+              moveMs={moveMs}
+              pointers={pointers}
+              tags={tags}
+              hasAux={hasAux}
+            />
+
+            {algorithm.treeView && (
+              <div className="tree-section">
+                <div className="panel-title">The heap as a tree</div>
+                <HeapTree frame={frame} tags={tags} moveMs={moveMs} />
+              </div>
+            )}
 
             <div className={`narration level-${level}`} aria-live={player.playing ? 'off' : 'polite'}>
               {narration.phase && <p className="narration-phase">{narration.phase}</p>}
@@ -219,21 +259,25 @@ function SizeInput({ size, onChange }: { size: number; onChange: (size: number) 
   )
 }
 
-const LEGEND: { key: string; label: string; types: SortEvent['type'][] }[] = [
-  { key: 'compare', label: 'Comparing', types: ['compare', 'compareHeld'] },
+const LEGEND: { key: string; label: string; types: (SortEvent['type'] | MarkKind)[] }[] = [
+  { key: 'compare', label: 'Comparing', types: ['compare', 'compareHeld', 'compareValue', 'compareAux'] },
   { key: 'swap', label: 'Swapping', types: ['swap'] },
-  { key: 'write', label: 'Writing', types: ['shift', 'drop'] },
+  { key: 'write', label: 'Writing', types: ['shift', 'drop', 'writeFromAux'] },
   { key: 'held', label: 'Key (held)', types: ['lift'] },
+  { key: 'mark', label: 'Pivot', types: ['pivot'] },
+  { key: 'mark', label: 'Current minimum', types: ['min'] },
+  { key: 'ghost', label: 'Old value (not yet overwritten)', types: ['copyOut'] },
   { key: 'sorted', label: 'Final position', types: ['markSorted'] },
 ]
 
 /** Shows only the colors this algorithm actually uses. */
 function Legend({ trace }: { trace: Trace }) {
-  const used = new Set(trace.frames.map((f) => f.step?.type))
+  const used = new Set<string | undefined>(trace.frames.map((f) => f.step?.type))
+  for (const f of trace.frames) for (const m of f.marks) used.add(m.kind)
   return (
     <ul className="legend">
       {LEGEND.filter((entry) => entry.types.some((t) => used.has(t))).map((entry) => (
-        <li key={entry.key}>
+        <li key={entry.label}>
           <span className={`swatch swatch-${entry.key}`} />
           {entry.label}
         </li>

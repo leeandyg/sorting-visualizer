@@ -22,7 +22,7 @@ export function record(algorithm: SortAlgorithm, input: readonly number[]): Trac
   }
 
   const finalValues = frame.items.map((item) => item?.value)
-  if (frame.held || finalValues.some((v, k) => v !== work[k])) {
+  if (frame.held || frame.aux.length > 0 || finalValues.some((v, k) => v !== work[k])) {
     throw new Error(`${algorithm.name}: replayed trace does not match the algorithm's result`)
   }
   return { algorithmId: algorithm.id, input: [...input], output: work, frames }
@@ -32,9 +32,13 @@ function initialFrame(input: readonly number[]): Frame {
   return {
     step: null,
     items: input.map((value, id): Item => ({ id, value })),
+    ghosts: input.map(() => null),
+    aux: [],
     held: null,
     sorted: input.map(() => false),
     regions: [],
+    focus: null,
+    marks: [],
     counters: { comparisons: 0, swaps: 0, writes: 0 },
     line: null,
     vars: {},
@@ -44,7 +48,7 @@ function initialFrame(input: readonly number[]): Frame {
 function apply(prev: Frame, step: Step): Frame {
   const items = [...prev.items]
   const counters = { ...prev.counters }
-  let { held, sorted } = prev
+  let { held, sorted, ghosts, aux } = prev
 
   const at = (i: number): Item => {
     if (i < 0 || i >= items.length) throw new Error(`${step.type}: index ${i} out of range`)
@@ -56,6 +60,11 @@ function apply(prev: Frame, step: Step): Frame {
     if (i < 0 || i >= items.length || items[i] !== null) {
       throw new Error(`${step.type}: index ${i} is not the gap`)
     }
+  }
+  const auxAt = ({ buffer, at }: { buffer: number; at: number }): Item => {
+    const item = aux[buffer]?.items[at]
+    if (!item) throw new Error(`${step.type}: temporary array ${buffer} has nothing at ${at}`)
+    return item
   }
 
   switch (step.type) {
@@ -92,18 +101,60 @@ function apply(prev: Frame, step: Step): Frame {
       held = null
       counters.writes++
       break
+    case 'compareValue':
+      at(step.i)
+      counters.comparisons++
+      break
+    case 'copyOut': {
+      const copied: Item[] = []
+      ghosts = [...ghosts]
+      for (let k = step.lo; k <= step.hi; k++) {
+        const item = at(k)
+        copied.push(item)
+        ghosts[k] = item.value
+        items[k] = null
+      }
+      aux = [...aux, { lo: step.lo, label: step.label, items: copied }]
+      counters.writes += copied.length
+      break
+    }
+    case 'compareAux':
+      auxAt(step.a)
+      auxAt(step.b)
+      counters.comparisons++
+      break
+    case 'writeFromAux': {
+      const item = auxAt(step.from)
+      expectGap(step.to)
+      items[step.to] = item
+      ghosts = [...ghosts]
+      ghosts[step.to] = null
+      aux = aux.map((buffer, b) =>
+        b === step.from.buffer ? { ...buffer, items: buffer.items.map((it, k) => (k === step.from.at ? null : it)) } : buffer,
+      )
+      // The temporary arrays go away together once everything has been written back.
+      if (aux.every((buffer) => buffer.items.every((it) => it === null))) aux = []
+      counters.writes++
+      break
+    }
     case 'markSorted':
       sorted = [...sorted]
       for (const i of step.indices) sorted[i] = true
+      break
+    case 'note':
       break
   }
 
   return {
     step,
     items,
+    ghosts,
+    aux,
     held,
     sorted,
     regions: step.regions ?? prev.regions,
+    focus: step.focus !== undefined ? step.focus : prev.focus,
+    marks: step.marks ? step.marks.map(({ i, kind }) => ({ id: at(i).id, kind })) : prev.marks,
     counters,
     line: step.line ?? prev.line,
     vars: step.vars ?? prev.vars,

@@ -4,6 +4,7 @@ import type { SortAlgorithm, Step } from '../engine/types'
 export const bubbleSort: SortAlgorithm = {
   id: 'bubble',
   name: 'Bubble sort',
+  stable: true,
   code: listing(`
 def bubble_sort(a):
     n = len(a)

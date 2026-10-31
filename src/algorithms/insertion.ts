@@ -4,6 +4,7 @@ import type { SortAlgorithm, Step } from '../engine/types'
 export const insertionSort: SortAlgorithm = {
   id: 'insertion',
   name: 'Insertion sort',
+  stable: true,
   code: listing(`
 def insertion_sort(a):
     for i in range(1, len(a)):                  #@ outer

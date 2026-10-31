@@ -1,11 +1,22 @@
-import type { AlgorithmId, Trace } from '../engine/types'
+import { algorithms } from '../algorithms'
+import { duplicateTags, superscript } from '../engine/tags'
+import type { AlgorithmId, Frame, Trace } from '../engine/types'
 import { bubbleNarrator } from './bubble'
+import { heapNarrator } from './heap'
 import { insertionNarrator } from './insertion'
+import { mergeNarrator } from './merge'
+import { quickNarrator } from './quick'
+import { selectionNarrator } from './selection'
 import type { Level, Narration, Narrator } from './types'
 
 const narrators: Record<AlgorithmId, Narrator> = {
   bubble: bubbleNarrator,
+  selection: selectionNarrator,
   insertion: insertionNarrator,
+  merge: mergeNarrator,
+  'quick-lomuto': quickNarrator('lomuto'),
+  'quick-hoare': quickNarrator('hoare'),
+  heap: heapNarrator,
 }
 
 export function narrate(trace: Trace, index: number, level: Level): Narration {
@@ -24,7 +35,32 @@ export function narrate(trace: Trace, index: number, level: Level): Narration {
     level === 'beginner'
       ? `Finished with ${comparisons} comparisons, ${swaps} swaps and ${writes} writes.`
       : `${comparisons} comparisons, ${swaps} swaps, ${writes} writes`
-  return { phase: totals, text }
+  return { phase: totals + stabilityNote(trace, frame, level), text }
+}
+
+/** When the input has duplicates, says whether this run kept equal values in their original order. */
+function stabilityNote(trace: Trace, frame: Frame, level: Level): string {
+  const tags = duplicateTags(trace.input)
+  if (tags.size === 0) return ''
+  const items = frame.items.map((item) => item!)
+  for (let k = 1; k < items.length; k++) {
+    const [x, y] = [items[k - 1], items[k]]
+    if (x.value === y.value && x.id > y.id) {
+      const [early, late] = [`${y.value}${superscript(tags.get(y.id)!)}`, `${x.value}${superscript(tags.get(x.id)!)}`]
+      return level === 'beginner'
+        ? ` Equal values changed order (${late} now comes before ${early}), so this run was not stable.`
+        : `; not stable (${late} before ${early})`
+    }
+  }
+  const algorithm = algorithms[trace.algorithmId]
+  if (!algorithm.stable) {
+    // A lucky run isn't a guarantee; don't let it suggest the algorithm is stable.
+    const name = (algorithm.family?.name ?? algorithm.name).toLowerCase()
+    return level === 'beginner'
+      ? ` Equal values happened to keep their original order this time (see the small letters), but ${name} is not stable in general.`
+      : '; order of equal values preserved this run (not guaranteed)'
+  }
+  return level === 'beginner' ? ' Equal values kept their original order (see the small letters), so this run was stable.' : '; stable'
 }
 
 export type { Level, Narration } from './types'

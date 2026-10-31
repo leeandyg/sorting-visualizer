@@ -1,0 +1,85 @@
+.heap-tree {
+  position: relative;
+  margin: 8px 0 16px;
+}
+
+.tree-edges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.tree-edges line {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transition: opacity 200ms;
+}
+
+.tree-edges line.out {
+  opacity: 0.25;
+}
+
+.tree-node {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--node-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bar);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition:
+    left var(--move-ms) ease-in-out,
+    top var(--move-ms) ease-in-out,
+    background-color 120ms,
+    opacity 200ms;
+}
+
+.dense .tree-node {
+  font-size: 10px;
+}
+
+.tree-node sup {
+  font-size: 0.65em;
+  font-weight: 500;
+}
+
+/* Sorted values have left the heap; they stay as faded leaves so the array mapping is still visible. */
+.tree-node.is-sorted {
+  background: var(--sorted);
+  opacity: 0.45;
+}
+
+.tree-node.is-compare {
+  background: var(--compare);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--compare);
+}
+
+.tree-node.is-swap {
+  background: var(--swap);
+}
+
+.tree-index {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.tree-note {
+  margin: 8px 0 16px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tree-node {
+    transition: none;
+  }
+}

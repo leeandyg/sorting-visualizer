@@ -45,16 +45,14 @@ describe.each(algorithmList)('$name', (algorithm) => {
     }
   })
 
-  it('is stable: equal values keep their original order', () => {
-    for (const input of cases) {
-      const last = record(algorithm, input).frames.at(-1)!
-      const items = last.items.map((item) => item!)
-      for (let k = 1; k < items.length; k++) {
-        if (items[k - 1].value === items[k].value) {
-          expect(items[k - 1].id).toBeLessThan(items[k].id)
-        }
-      }
+  it(algorithm.stable ? 'is stable: equal values keep their original order' : 'is unstable on some input', () => {
+    const reordersEqualValues = (input: number[]) => {
+      const items = record(algorithm, input).frames.at(-1)!.items.map((item) => item!)
+      return items.some((item, k) => k > 0 && items[k - 1].value === item.value && items[k - 1].id > item.id)
     }
+    const unstableCases = cases.filter(reordersEqualValues)
+    if (algorithm.stable) expect(unstableCases).toEqual([])
+    else expect(unstableCases.length).toBeGreaterThan(0)
   })
 
   it('only uses line keys that exist in its code listing, and uses every tag', () => {
@@ -108,6 +106,18 @@ describe('counters match the code', () => {
 
   it('insertion sort: sorted input does one comparison and one write per element', () => {
     expect(countersFor('insertion', [1, 2, 3, 4, 5, 6])).toEqual({ comparisons: 5, swaps: 0, writes: 5 })
+  })
+
+  it('selection sort: always n(n-1)/2 comparisons and n-1 swaps', () => {
+    expect(countersFor('selection', [1, 2, 3, 4, 5, 6])).toEqual({ comparisons: 15, swaps: 5, writes: 10 })
+  })
+
+  it('merge sort: each of the log2(n) levels copies n values out and writes n back', () => {
+    expect(countersFor('merge', [8, 7, 6, 5, 4, 3, 2, 1]).writes).toBe(3 * (8 + 8))
+  })
+
+  it('quick sort (Lomuto): sorted input is the worst case, n(n-1)/2 comparisons', () => {
+    expect(countersFor('quick-lomuto', [1, 2, 3, 4, 5, 6]).comparisons).toBe(15)
   })
 
   it('insertion sort: reversed input shifts every pair, plus one write per key', () => {

@@ -1,5 +1,8 @@
 .array-view {
   --stage-height: 320px;
+  /* Distance from the main row's bars down to the temporary-array row: the index (24px),
+     pointer (34px) and region (32px) rows, plus the aux area's 8px top margin. */
+  --aux-gap: 98px;
   /* Horizontal drags inspect bars; vertical drags still scroll the page. */
   touch-action: pan-y;
   user-select: none;
@@ -8,9 +11,15 @@
 
 .array-lane {
   position: relative;
+  /* Above the later rows, so bars that move into the temporary-array row draw over its boxes. */
+  z-index: 1;
   height: calc(var(--stage-height) - 64px);
   /* Room above for a lifted element (LIFT in ArrayView.tsx, plus a little space). */
   margin-top: 64px;
+}
+
+.array-view.has-aux {
+  --stage-height: 270px;
 }
 
 .slot {
@@ -22,7 +31,14 @@
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  transition: transform var(--move-ms) ease-in-out;
+  transition:
+    transform var(--move-ms) ease-in-out,
+    opacity 200ms;
+}
+
+/* Outside the range the current recursive call is working on. */
+.slot.is-outside {
+  opacity: 0.3;
 }
 
 .slot.is-inspected {
@@ -59,6 +75,14 @@
   white-space: nowrap;
 }
 
+/* Duplicate tags (5ᵃ, 5ᵇ), so you can see whether equal values keep their order. */
+.value sup {
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
 /* Too thin for numbers: keep the label's space so bar heights don't change, but hide it. */
 .compact .value {
   visibility: hidden;
@@ -84,6 +108,16 @@
   color: var(--held);
 }
 
+.is-pivot .bar,
+.is-min .bar {
+  background: var(--mark);
+}
+
+.is-pivot .value,
+.is-min .value {
+  color: var(--mark);
+}
+
 .is-compare .bar {
   background: var(--compare);
 }
@@ -102,10 +136,26 @@
   border: 2px dashed var(--border-strong);
 }
 
+/* An old value merge sort has copied out; a still holds it until it's overwritten. */
+.ghost .bar {
+  background: transparent;
+  border: 2px dashed var(--border-strong);
+  border-bottom: none;
+}
+
+.ghost .value {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.compact .ghost .value {
+  visibility: hidden;
+}
+
 .array-indices {
   position: relative;
   display: flex;
-  min-height: 23px;
+  height: 24px;
   border-top: 1px solid var(--border);
   padding-top: 4px;
 }
@@ -190,9 +240,39 @@
   color: var(--muted);
 }
 
+/* Merge sort's temporary arrays, drawn under the positions they were copied from. */
+.aux-area {
+  position: relative;
+  height: calc(var(--stage-height) - 64px + 22px);
+  margin-top: 8px;
+}
+
+.aux-buffer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.aux-buffer span {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 @media (max-width: 600px) {
   .array-view {
     --stage-height: 240px;
+  }
+
+  .array-view.has-aux {
+    --stage-height: 210px;
   }
 }
 
