@@ -126,9 +126,10 @@
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--compare);
 }
 
+/* Striped as well as colored, so moving bars stand out from compared ones without relying on hue. */
 .is-swap .bar,
 .is-write .bar {
-  background: var(--swap);
+  background: var(--swap) var(--stripes);
 }
 
 .gap .bar {

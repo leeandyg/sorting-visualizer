@@ -1,0 +1,52 @@
+.info-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.info-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.info-card p {
+  margin: 12px 0 0;
+  line-height: 1.6;
+}
+
+.info-card .info-idea {
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.info-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+
+.info-stats div {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.info-stats dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.info-stats dd {
+  margin: 2px 0 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.info-card .info-glossary {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--muted);
+}

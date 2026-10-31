@@ -16,6 +16,8 @@
   --held: #7a5af5;
   --sorted: #2f9e5b;
   --mark: #d6336c;
+  --stripes: repeating-linear-gradient(-45deg, transparent 0 5px, rgb(255 255 255 / 0.3) 5px 8px);
+  --ready-bg: #ffffff;
   --inspect-filter: brightness(0.8);
 
   --code-active: #e8eefc;
@@ -46,6 +48,7 @@
   --held: #a38bff;
   --sorted: #3fbf74;
   --mark: #f06595;
+  --ready-bg: #30343c;
   /* Bars are dark on a dark background, so inspecting lightens them to stand out instead. */
   --inspect-filter: brightness(1.35);
 

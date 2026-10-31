@@ -110,6 +110,29 @@
   width: 110px;
 }
 
+.random-group .shape-select {
+  height: 30px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 13px;
+}
+
+/* Gray when pressing it would just regenerate what's loaded; white ("ready") once the size or
+   kind has changed or a different array is loaded. It's clickable either way. */
+.button.generate {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.button.generate.is-ready {
+  background: var(--ready-bg);
+  border-color: var(--border-strong);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
 /* Reads as plain text until clicked, then edits like a field. */
 .size-input {
   width: 4ch;
@@ -180,6 +203,22 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 8px 16px;
+}
+
+.stage-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.share-note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.share-note:empty {
+  display: none;
 }
 
 .segmented {
@@ -281,7 +320,7 @@
 
 .swatch-swap,
 .swatch-write {
-  background: var(--swap);
+  background: var(--swap) var(--stripes);
 }
 
 .swatch-held {
@@ -334,6 +373,17 @@
 @media (max-width: 900px) {
   .stage-body {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Keep playback reachable while scrolling down to the code on narrow screens. */
+  .app > .player-controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 0 -16px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border);
+    background: var(--bg);
   }
 
   .stage-body > .code-panel {

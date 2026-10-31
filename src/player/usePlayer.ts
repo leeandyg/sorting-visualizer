@@ -7,14 +7,14 @@ export const MAX_SPEED = 100
  * Steps through `frameCount` frames like a video player. Speed is in steps per second;
  * at high speeds several frames are advanced per animation frame.
  */
-export function usePlayer(frameCount: number) {
+export function usePlayer(frameCount: number, initialIndex = 0) {
   const last = Math.max(frameCount - 1, 0)
-  const [index, setIndex] = useState(0)
+  const [index, setIndex] = useState(() => Math.min(initialIndex, last))
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(2)
 
   // The animation loop needs the current index without restarting on every step.
-  const indexRef = useRef(0)
+  const indexRef = useRef(Math.min(initialIndex, last))
   const goTo = useCallback(
     (i: number) => {
       const clamped = Math.min(Math.max(i, 0), last)

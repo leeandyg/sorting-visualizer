@@ -62,7 +62,7 @@
 }
 
 .tree-node.is-swap {
-  background: var(--swap);
+  background: var(--swap) var(--stripes);
 }
 
 .tree-index {

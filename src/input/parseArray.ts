@@ -20,7 +20,3 @@ export function parseArray(text: string): ParseResult {
   }
   return { values: tokens.map(Number) }
 }
-
-export function randomArray(size: number): number[] {
-  return Array.from({ length: size }, () => 1 + Math.floor(Math.random() * 99))
-}

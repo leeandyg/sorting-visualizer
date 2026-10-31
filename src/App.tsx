@@ -2,31 +2,40 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { algorithmFamilies, algorithms } from './algorithms'
 import { ArrayView } from './components/ArrayView'
 import { CodePanel } from './components/CodePanel'
+import { InfoCard } from './components/InfoCard'
 import { HeapTree } from './components/HeapTree'
 import { PlayerControls } from './components/PlayerControls'
 import { MAX_SIZE, record } from './engine/record'
 import { duplicateTags } from './engine/tags'
 import type { AlgorithmId, MarkKind, SortEvent, Trace } from './engine/types'
-import { parseArray, randomArray } from './input/parseArray'
+import { generate, SHAPES, type Shape } from './input/generate'
+import { parseArray } from './input/parseArray'
 import { narrate, type Level } from './narration'
 import { usePlayer, type Player } from './player/usePlayer'
+import { readUrlState, urlFor } from './settings/urlState'
 import { useStoredChoice } from './settings/useStoredChoice'
 import { useTheme, type ThemeChoice } from './theme/theme'
 import './App.css'
 
 const DEFAULT_INPUT = [5, 2, 9, 1, 6, 3, 8, 4]
+/** Algorithm, array and step from a shared link, read once on load. */
+const fromUrl = readUrlState(window.location.search)
 
 function App() {
-  const [algorithmId, setAlgorithmId] = useState<AlgorithmId>('bubble')
-  const [input, setInput] = useState(DEFAULT_INPUT)
-  const [text, setText] = useState(DEFAULT_INPUT.join(', '))
-  const [size, setSize] = useState(DEFAULT_INPUT.length)
+  const [algorithmId, setAlgorithmId] = useState<AlgorithmId>(fromUrl.algorithm ?? 'bubble')
+  const [input, setInput] = useState(fromUrl.input ?? DEFAULT_INPUT)
+  const [text, setText] = useState(input.join(', '))
+  const [size, setSize] = useState(Math.max(input.length, 2))
+  const [shape, setShape] = useState<Shape>('random')
+  // What Generate last produced, so its button can show whether pressing it would change anything.
+  const [generated, setGenerated] = useState<{ values: number[]; size: number; shape: Shape } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [shareNote, setShareNote] = useState<string | null>(null)
   const theme = useTheme()
   const [level, setLevel] = useStoredChoice<Level>('narration-level', ['beginner', 'expert'], 'beginner')
 
   const trace = useMemo(() => record(algorithms[algorithmId], input), [algorithmId, input])
-  const player = usePlayer(trace.frames.length)
+  const player = usePlayer(trace.frames.length, fromUrl.step)
   const frame = trace.frames[player.index]
   const algorithm = algorithms[algorithmId]
   const narration = narrate(trace, player.index, level)
@@ -39,6 +48,27 @@ function App() {
   })
 
   useKeyboardShortcuts(player, trace.frames.length)
+
+  // Keep the address bar pointing at the current algorithm and array, so a refresh or a copied URL keeps them.
+  useEffect(() => {
+    window.history.replaceState(null, '', urlFor(window.location, { algorithm: algorithmId, input }))
+  }, [algorithmId, input])
+
+  const share = async () => {
+    const url = urlFor(window.location, { algorithm: algorithmId, input, step: player.index })
+    window.history.replaceState(null, '', url)
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareNote(`Link to step ${player.index} copied`)
+    } catch {
+      setShareNote('Copy the link from the address bar')
+    }
+    window.setTimeout(() => setShareNote(null), 2500)
+  }
+
+  // Generate always makes a fresh array; this only decides whether its button looks "ready" (something would change).
+  const generateReady =
+    !generated || generated.size !== size || generated.shape !== shape || generated.values.join() !== input.join()
 
   const run = (e: FormEvent) => {
     e.preventDefault()
@@ -53,9 +83,10 @@ function App() {
   }
 
   const randomize = () => {
-    const values = randomArray(size)
+    const values = generate(shape, size)
     setText(values.join(', '))
     setInput(values)
+    setGenerated({ values, size, shape })
     setError(null)
     player.reset(false)
   }
@@ -128,18 +159,30 @@ function App() {
         </button>
 
         <div className="field">
-          <span>Random array</span>
+          <span>Generate array</span>
           <div className="random-group">
+            <select
+              className="shape-select"
+              value={shape}
+              onChange={(e) => setShape(e.target.value as Shape)}
+              aria-label="Kind of array to generate"
+            >
+              {SHAPES.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
             <input
               type="range"
               min={2}
               max={MAX_SIZE}
               value={size}
               onChange={(e) => setSize(Number(e.target.value))}
-              aria-label="Random array size"
+              aria-label="Generated array size"
             />
             <SizeInput size={size} onChange={setSize} />
-            <button type="button" className="button small" onClick={randomize}>
+            <button type="button" className={generateReady ? 'button small generate is-ready' : 'button small generate'} onClick={randomize}>
               Generate
             </button>
           </div>
@@ -155,12 +198,20 @@ function App() {
       <section className="stage">
         <div className="stage-top">
           <Legend trace={trace} />
-          <div className="segmented" role="group" aria-label="Explanation detail">
-            {(['beginner', 'expert'] as const).map((option) => (
-              <button key={option} type="button" aria-pressed={level === option} onClick={() => setLevel(option)}>
-                {option === 'beginner' ? 'Beginner' : 'Expert'}
-              </button>
-            ))}
+          <div className="stage-actions">
+            <div className="segmented" role="group" aria-label="Explanation detail">
+              {(['beginner', 'expert'] as const).map((option) => (
+                <button key={option} type="button" aria-pressed={level === option} onClick={() => setLevel(option)}>
+                  {option === 'beginner' ? 'Beginner' : 'Expert'}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="button small share-button" onClick={share} title="Copy a link to this exact step">
+              Share
+            </button>
+            <span className="share-note" role="status">
+              {shareNote}
+            </span>
           </div>
         </div>
 
@@ -208,6 +259,8 @@ function App() {
       </section>
 
       <PlayerControls player={player} frameCount={trace.frames.length} />
+
+      <InfoCard algorithm={algorithm} level={level} />
     </main>
   )
 }
@@ -253,7 +306,7 @@ function SizeInput({ size, onChange }: { size: number; onChange: (size: number) 
           e.currentTarget.blur()
         }
       }}
-      aria-label="Random array size"
+      aria-label="Generated array size"
       title="Click to type a size"
     />
   )

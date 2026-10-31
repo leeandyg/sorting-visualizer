@@ -79,6 +79,21 @@ export function ArrayView({ frame, maxValue, moveMs, pointers, tags, hasAux }: P
   const revealHalfPx = (String(inspected ?? 0).length * INDEX_DIGIT_PX) / 2 + 4
   const captionOnRight = inspected !== null && (inspected + 0.5) * slotPx - revealHalfPx < CAPTION_PX
 
+  // The drawing itself is hidden from screen readers; this describes the same state in words.
+  const spoken = (item: Item | null, k: number) => {
+    if (!item) return frame.ghosts[k] !== null ? `old ${frame.ghosts[k]}` : 'gap'
+    const tag = tags.get(item.id)
+    return tag ? `${item.value} (${tag})` : String(item.value)
+  }
+  const description = [
+    `Array: ${frame.items.map(spoken).join(', ')}.`,
+    frame.held && `Holding key ${frame.held.value}.`,
+    ...frame.aux.map((b) => `${b.label}: ${b.items.flatMap((it) => (it ? [it.value] : [])).join(', ') || 'empty'}.`),
+    `${frame.sorted.filter(Boolean).length} of ${n} in final position.`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
   const classes = ['array-view']
   if (!showValues) classes.push('compact')
   if (hasAux) classes.push('has-aux')
@@ -86,6 +101,8 @@ export function ArrayView({ frame, maxValue, moveMs, pointers, tags, hasAux }: P
   return (
     <div
       ref={setRoot}
+      role="img"
+      aria-label={description}
       className={classes.join(' ')}
       style={{ '--move-ms': `${moveMs}ms` } as CSSProperties}
       onPointerDown={onPointer}
