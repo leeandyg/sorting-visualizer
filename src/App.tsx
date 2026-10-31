@@ -189,6 +189,14 @@ function SizeInput({ size, onChange }: { size: number; onChange: (size: number) 
       type="text"
       inputMode="numeric"
       value={draft ?? String(size)}
+      onMouseDown={(e) => {
+        // The first click selects the whole number so typing replaces it. Letting the browser handle
+        // that click would drop a caret on mouseup and undo the selection.
+        if (document.activeElement !== e.currentTarget) {
+          e.preventDefault()
+          e.currentTarget.focus()
+        }
+      }}
       onFocus={(e) => {
         setDraft(String(size))
         e.target.select()
