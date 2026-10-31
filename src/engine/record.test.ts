@@ -6,7 +6,7 @@ const fake = (steps: Step[], sortsFor = false): SortAlgorithm => ({
   id: 'bubble',
   name: 'Fake',
   stable: true,
-  code: [],
+  code: { python: [], javascript: [], java: [], cpp: [] },
   pointers: [],
   *run(a) {
     if (sortsFor) a.sort((x, y) => x - y)

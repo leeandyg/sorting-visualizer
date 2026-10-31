@@ -5,6 +5,35 @@
   min-width: 0;
 }
 
+.code-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+.code-tabs button {
+  margin-bottom: -1px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.code-tabs button:hover {
+  color: var(--text);
+}
+
+.code-tabs button[aria-selected='true'] {
+  border-color: var(--border);
+  border-bottom-color: var(--bg);
+  background: var(--bg);
+  color: var(--text);
+}
+
 .panel-title {
   font-size: 12px;
   font-weight: 600;

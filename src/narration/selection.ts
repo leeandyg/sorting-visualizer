@@ -1,3 +1,4 @@
+import { ident } from '../engine/lang'
 import { range, valueAt, type Narrator } from './types'
 
 export const selectionNarrator: Narrator = {
@@ -16,24 +17,25 @@ export const selectionNarrator: Narrator = {
       : `i = ${i}: min of ${range(i, n - 1, level)} → a[${i}]`
   },
 
-  step({ frame, n, level }) {
+  step({ frame, n, level, lang }) {
     const step = frame.step!
     const beginner = level === 'beginner'
     const i = frame.vars.i as number
     const minIdx = frame.vars.min_idx as number
+    const minName = ident('min_idx', lang)
     switch (step.type) {
       case 'note': {
         const v = valueAt(frame, minIdx)
         if (step.line === 'outer') {
           return beginner
-            ? `Start by assuming the first unsorted value, ${v} at position ${i}, is the smallest. min_idx = ${i}.`
-            : `min_idx = ${i} (${v})`
+            ? `Start by assuming the first unsorted value, ${v} at position ${i}, is the smallest. ${minName} = ${i}.`
+            : `${minName} = ${i} (${v})`
         }
-        return beginner ? `min_idx = ${minIdx}: ${v} is now the smallest value found in this pass.` : `min_idx = ${minIdx}`
+        return beginner ? `${minName} = ${minIdx}: ${v} is now the smallest value found in this pass.` : `${minName} = ${minIdx}`
       }
       case 'compare': {
         const [x, m] = [valueAt(frame, step.i)!, valueAt(frame, step.j)!]
-        if (!beginner) return `a[${step.i}]=${x} ${x < m ? '<' : '≥'} a[${step.j}]=${m}${x < m ? ` → min_idx = ${step.i}` : ''}`
+        if (!beginner) return `a[${step.i}]=${x} ${x < m ? '<' : '≥'} a[${step.j}]=${m}${x < m ? ` → ${minName} = ${step.i}` : ''}`
         const lead = `Compare ${x} (position ${step.i}) with the smallest so far, ${m} (position ${step.j}). `
         if (x < m) return lead + `${x} is smaller, so it becomes the new smallest.`
         if (x === m) return lead + `They are equal. Only a strictly smaller value replaces the smallest, so keep position ${step.j}.`

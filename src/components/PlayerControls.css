@@ -27,6 +27,14 @@
   border-color: var(--border-strong);
 }
 
+.sound-button {
+  color: var(--muted);
+}
+
+.sound-button.is-on {
+  color: var(--accent);
+}
+
 .icon-button.primary {
   background: var(--accent);
   border-color: var(--accent);

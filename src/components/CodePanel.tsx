@@ -1,15 +1,19 @@
 import { useEffect, useRef, type ReactNode } from 'react'
+import { ident, LANGS, literal, type Lang } from '../engine/lang'
 import type { CodeLine, Frame, Vars } from '../engine/types'
 import './CodePanel.css'
 
 interface Props {
+  /** The listing in `lang`. */
   code: CodeLine[]
+  lang: Lang
+  onLangChange: (lang: Lang) => void
   frame: Frame
   prev: Frame | null
 }
 
-/** The Python listing with the current step's line(s) highlighted, and the loop variables below it. */
-export function CodePanel({ code, frame, prev }: Props) {
+/** The listing with the current step's line(s) highlighted, language tabs, and the variables below it. */
+export function CodePanel({ code, lang, onLangChange, frame, prev }: Props) {
   const active = frame.step?.line
   const codeRef = useRef<HTMLPreElement>(null)
 
@@ -27,7 +31,19 @@ export function CodePanel({ code, frame, prev }: Props) {
 
   return (
     <div className="code-panel">
-      <div className="panel-title">Python</div>
+      <div className="code-tabs" role="tablist" aria-label="Code language">
+        {LANGS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={option.id === lang}
+            onClick={() => onLangChange(option.id)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
       <pre className="code" ref={codeRef}>
         <code>
           {code.map((line, k) => (
@@ -42,12 +58,12 @@ export function CodePanel({ code, frame, prev }: Props) {
       </pre>
 
       <div className="panel-title">Variables</div>
-      <Variables vars={frame.vars} prev={prev?.vars ?? {}} />
+      <Variables vars={frame.vars} prev={prev?.vars ?? {}} lang={lang} />
     </div>
   )
 }
 
-function Variables({ vars, prev }: { vars: Vars; prev: Vars }) {
+function Variables({ vars, prev, lang }: { vars: Vars; prev: Vars; lang: Lang }) {
   const names = Object.keys(vars)
   if (names.length === 0) return <p className="vars-empty">None right now</p>
   return (
@@ -55,19 +71,20 @@ function Variables({ vars, prev }: { vars: Vars; prev: Vars }) {
       {names.map((name) => (
         // Variables that this step changed are emphasised so the eye catches them.
         <div key={name} className={prev[name] !== vars[name] ? 'var is-changed' : 'var'}>
-          <dt>{name}</dt>
-          <dd>{formatPython(vars[name])}</dd>
+          <dt>{ident(name, lang)}</dt>
+          <dd>{literal(vars[name], lang)}</dd>
         </div>
       ))}
     </dl>
   )
 }
 
-const formatPython = (value: number | boolean) => (typeof value === 'boolean' ? (value ? 'True' : 'False') : String(value))
+// Keywords across the four languages (none of them are identifiers in the listings), then
+// library names, then numbers.
+const TOKEN =
+  /\b(def|for|in|if|not|and|or|while|break|return|True|False|true|false|function|const|let|do|else|void|int|bool|boolean|using|static)\b|\b(len|range|Math|Arrays|std|Vec|swap|slice|copyOfRange|floor|size|length|begin|vector)\b|\b(\d+)\b/g
 
-const TOKEN = /\b(def|for|in|if|not|and|or|while|break|return|True|False)\b|\b(len|range)\b|\b(\d+)\b/g
-
-/** Minimal Python highlighting: keywords, builtins and numbers. */
+/** Minimal highlighting: keywords, library names and numbers. */
 function highlight(text: string): ReactNode[] {
   const parts: ReactNode[] = []
   let last = 0

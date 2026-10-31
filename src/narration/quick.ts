@@ -1,3 +1,4 @@
+import { ident } from '../engine/lang'
 import { range, valueAt, type Level, type Narrator, type StepContext } from './types'
 
 type Scheme = 'lomuto' | 'hoare'
@@ -22,10 +23,10 @@ export function quickNarrator(scheme: Scheme): Narrator {
   return {
     intro: intros[scheme],
 
-    phase(frame, _n, level) {
+    phase(frame, _n, level, lang) {
       const { lo, hi, pivot } = frame.vars
       if (typeof lo !== 'number' || typeof hi !== 'number') return ''
-      if (level === 'expert') return `quick_sort(a, ${lo}, ${hi})${typeof pivot === 'number' ? `, pivot = ${pivot}` : ''}`
+      if (level === 'expert') return `${ident('quick_sort', lang)}(a, ${lo}, ${hi})${typeof pivot === 'number' ? `, pivot = ${pivot}` : ''}`
       return typeof pivot === 'number'
         ? `Partitioning ${range(lo, hi, level)} around the pivot, ${pivot}.`
         : `Sorting ${range(lo, hi, level)}.`

@@ -1,3 +1,4 @@
+import type { Lang } from '../engine/lang'
 import type { Frame } from '../engine/types'
 
 export type Level = 'beginner' | 'expert'
@@ -15,12 +16,14 @@ export interface StepContext {
   prev: Frame
   n: number
   level: Level
+  /** The code tab's language, for identifiers and literals quoted in expert notes. */
+  lang: Lang
 }
 
 export interface Narrator {
   /** Shown on the initial frame, before anything has happened. */
   intro: Record<Level, string>
-  phase: (frame: Frame, n: number, level: Level) => string
+  phase: (frame: Frame, n: number, level: Level, lang: Lang) => string
   step: (ctx: StepContext) => string
 }
 

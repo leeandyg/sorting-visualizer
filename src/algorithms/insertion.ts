@@ -5,7 +5,8 @@ export const insertionSort: SortAlgorithm = {
   id: 'insertion',
   name: 'Insertion sort',
   stable: true,
-  code: listing(`
+  code: {
+    python: listing(`
 def insertion_sort(a):
     for i in range(1, len(a)):                  #@ outer
         key = a[i]                              #@ key
@@ -15,6 +16,49 @@ def insertion_sort(a):
             j -= 1                              #@ shift
         a[j + 1] = key                          #@ drop
 `),
+    javascript: listing(`
+function insertionSort(a) {
+  for (let i = 1; i < a.length; i++) {       #@ outer
+    const key = a[i];                        #@ key
+    let j = i - 1;                           #@ key
+    while (j >= 0 && a[j] > key) {           #@ while
+      a[j + 1] = a[j];                       #@ shift
+      j--;                                   #@ shift
+    }
+    a[j + 1] = key;                          #@ drop
+  }
+}
+`),
+    java: listing(`
+void insertionSort(int[] a) {
+  for (int i = 1; i < a.length; i++) {       #@ outer
+    int key = a[i];                          #@ key
+    int j = i - 1;                           #@ key
+    while (j >= 0 && a[j] > key) {           #@ while
+      a[j + 1] = a[j];                       #@ shift
+      j--;                                   #@ shift
+    }
+    a[j + 1] = key;                          #@ drop
+  }
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+
+void insertion_sort(Vec& a) {
+  int n = a.size();
+  for (int i = 1; i < n; i++) {              #@ outer
+    int key = a[i];                          #@ key
+    int j = i - 1;                           #@ key
+    while (j >= 0 && a[j] > key) {           #@ while
+      a[j + 1] = a[j];                       #@ shift
+      j--;                                   #@ shift
+    }
+    a[j + 1] = key;                          #@ drop
+  }
+}
+`),
+  },
   pointers: [pointer('i'), pointer('j')],
   *run(a: number[]): Generator<Step, void, undefined> {
     const n = a.length

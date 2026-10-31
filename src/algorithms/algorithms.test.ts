@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { LANGS, type Lang } from '../engine/lang'
 import { record } from '../engine/record'
 import { narrate } from '../narration'
 import { algorithmList, algorithms } from '.'
@@ -56,7 +57,7 @@ describe.each(algorithmList)('$name', (algorithm) => {
   })
 
   it('only uses line keys that exist in its code listing, and uses every tag', () => {
-    const tagged = new Set(algorithm.code.flatMap((line) => line.keys))
+    const tagged = new Set(algorithm.code.python.flatMap((line) => line.keys))
     const used = new Set<string>()
     for (const input of cases) {
       for (const frame of record(algorithm, input).frames) {
@@ -67,28 +68,41 @@ describe.each(algorithmList)('$name', (algorithm) => {
     expect([...tagged].filter((key) => !used.has(key))).toEqual([])
   })
 
-  it('narrates every frame at both levels without gaps or undefined values', () => {
+  it('tags every language the same way as Python', () => {
+    const tagsOf = (lang: Lang) => [...new Set(algorithm.code[lang].flatMap((line) => line.keys))].sort()
+    for (const { id } of LANGS) expect(tagsOf(id), id).toEqual(tagsOf('python'))
+  })
+
+  it('narrates every frame at both levels and in every code language without gaps or undefined values', () => {
+    // Collect problems and assert once: an expect() per frame is far slower than the narration itself.
+    const problems: string[] = []
     for (const input of cases) {
       const trace = record(algorithm, input)
       for (let k = 0; k < trace.frames.length; k++) {
         for (const level of ['beginner', 'expert'] as const) {
-          const { phase, text } = narrate(trace, k, level)
-          expect(text, `frame ${k} of [${input}]`).not.toBe('')
-          expect(`${phase} ${text}`).not.toMatch(/undefined|NaN|null/)
+          for (const { id: lang } of LANGS) {
+            const { phase, text } = narrate(trace, k, level, lang)
+            if (text === '' || /undefined|NaN|null/.test(`${phase} ${text}`)) {
+              problems.push(`[${input}] frame ${k} ${level}/${lang}: ${phase} | ${text}`)
+            }
+          }
         }
       }
     }
+    expect(problems.slice(0, 5)).toEqual([])
   })
 
   it('never marks a position sorted before it holds its final value', () => {
+    const problems: string[] = []
     for (const input of cases) {
       const trace = record(algorithm, input)
-      for (const frame of trace.frames) {
+      trace.frames.forEach((frame, f) => {
         frame.sorted.forEach((isSorted, k) => {
-          if (isSorted) expect(frame.items[k]?.value).toBe(trace.output[k])
+          if (isSorted && frame.items[k]?.value !== trace.output[k]) problems.push(`[${input}] frame ${f} position ${k}`)
         })
-      }
+      })
     }
+    expect(problems.slice(0, 5)).toEqual([])
   })
 })
 

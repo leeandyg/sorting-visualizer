@@ -7,6 +7,7 @@ import { InfoCard } from './components/InfoCard'
 import { HeapTree } from './components/HeapTree'
 import { PlayerControls } from './components/PlayerControls'
 import { MAX_SIZE, record } from './engine/record'
+import { ident, LANGS, type Lang } from './engine/lang'
 import { duplicateTags } from './engine/tags'
 import type { AlgorithmId, MarkKind, SortEvent, Trace } from './engine/types'
 import { generate, SHAPES, type Shape } from './input/generate'
@@ -15,6 +16,7 @@ import { narrate, type Level } from './narration'
 import { nextSpeed, usePlayer, type Player } from './player/usePlayer'
 import { readUrlState, urlFor } from './settings/urlState'
 import { useStoredChoice } from './settings/useStoredChoice'
+import { playDone, playTones, tonesFor } from './sound/sound'
 import { useTheme, type ThemeChoice } from './theme/theme'
 import './App.css'
 
@@ -34,19 +36,25 @@ function App() {
   const [shareNote, setShareNote] = useState<string | null>(null)
   const theme = useTheme()
   const [level, setLevel] = useStoredChoice<Level>('narration-level', ['beginner', 'expert'], 'beginner')
+  const [sound, setSound] = useStoredChoice<'on' | 'off'>('sound', ['on', 'off'], 'off')
+  const [lang, setLang] = useStoredChoice<Lang>(
+    'code-lang',
+    LANGS.map((l) => l.id),
+    'python',
+  )
 
   const trace = useMemo(() => record(algorithms[algorithmId], input), [algorithmId, input])
   const player = usePlayer(trace.frames.length, fromUrl.step)
   const frame = trace.frames[player.index]
   const algorithm = algorithms[algorithmId]
-  const narration = narrate(trace, player.index, level)
+  const narration = narrate(trace, player.index, level, lang)
   const family = algorithmFamilies.find((f) => f.variants.includes(algorithm))!
   const tags = useMemo(() => duplicateTags(input), [input])
   const hasAux = useMemo(() => trace.frames.some((f) => f.aux.length > 0), [trace])
   const hasLift = useMemo(() => trace.frames.some((f) => f.step?.type === 'lift'), [trace])
   const pointers = algorithm.pointers.flatMap((p) => {
     const index = p.at(frame.vars)
-    return index !== undefined && index >= 0 && index < input.length ? [{ label: p.label, index }] : []
+    return index !== undefined && index >= 0 && index < input.length ? [{ label: ident(p.label, lang), index }] : []
   })
 
 
@@ -93,7 +101,15 @@ function App() {
     player.reset(true)
   }
 
-  useKeyboardShortcuts(player, trace.frames.length, run)
+  const toggleSound = () => {
+    const next = sound === 'on' ? 'off' : 'on'
+    setSound(next)
+    // A soft blip confirms sound works (and starts audio, which needs a click or key press).
+    if (next === 'on') playTones([440], 90)
+  }
+
+  useKeyboardShortcuts(player, trace.frames.length, run, toggleSound)
+  useStepSound(sound === 'on', trace, player.index, Math.max(...input, 1))
 
   const randomize = () => {
     const values = generate(shape, size)
@@ -272,7 +288,13 @@ function App() {
           </div>
 
           <div className="stage-side">
-            <CodePanel code={algorithm.code} frame={frame} prev={trace.frames[player.index - 1] ?? null} />
+            <CodePanel
+              code={algorithm.code[lang]}
+              lang={lang}
+              onLangChange={setLang}
+              frame={frame}
+              prev={trace.frames[player.index - 1] ?? null}
+            />
             <dl className="counters">
               <div>
                 <dt>Comparisons</dt>
@@ -291,7 +313,7 @@ function App() {
         </div>
       </section>
 
-      <PlayerControls player={player} frameCount={trace.frames.length} />
+      <PlayerControls player={player} frameCount={trace.frames.length} sound={sound === 'on'} onToggleSound={toggleSound} />
 
       <InfoCard algorithm={algorithm} level={level} />
     </main>
@@ -421,8 +443,8 @@ function ThemeSwitcher({ choice, onChange }: { choice: ThemeChoice; onChange: (c
   )
 }
 
-/** Space: play/pause, Enter: run, ←/→: step (Shift: 5 steps), Q: start, E: end, −/=: slower/faster. Ignored while typing in a field. */
-function useKeyboardShortcuts(player: Player, frameCount: number, run: () => void) {
+/** Space: play/pause, Enter: run, ←/→: step (Shift: 5 steps), Q: start, E: end, −/=: slower/faster, M: sound. Ignored while typing in a field. */
+function useKeyboardShortcuts(player: Player, frameCount: number, run: () => void, toggleSound: () => void) {
   // Which element got focus from a click: the last interaction before the focus change was a
   // pointer press rather than a key (like Tab). Browsers mark even clicked buttons :focus-visible
   // once a key is pressed, so track it here. Refs, because the listeners are re-attached every render.
@@ -481,6 +503,11 @@ function useKeyboardShortcuts(player: Player, frameCount: number, run: () => voi
           e.preventDefault()
           player.seek(frameCount - 1)
           break
+        case 'm':
+        case 'M':
+          e.preventDefault()
+          toggleSound()
+          break
         case '-':
         case '_':
         case '=':
@@ -507,7 +534,35 @@ function useKeyboardShortcuts(player: Player, frameCount: number, run: () => voi
       window.removeEventListener('pointerdown', onPointerDown, true)
       window.removeEventListener('focusin', onFocusIn)
     }
-  }, [player, frameCount, run])
+  }, [player, frameCount, run, toggleSound])
+}
+
+/** At most this many notes per second; faster playback plays the current step on each beat instead of every step. */
+const MAX_NOTES_PER_SECOND = 14
+
+/**
+ * Plays the values each new step touched, pitched by size, and a chime when the sort finishes.
+ * Notes sound the same at every speed (same length); when steps come faster than
+ * MAX_NOTES_PER_SECOND, some are skipped rather than squeezed into short, buzzy blips.
+ */
+function useStepSound(enabled: boolean, trace: Trace, index: number, maxValue: number) {
+  const lastIndex = useRef(index)
+  const lastTone = useRef(0)
+  useEffect(() => {
+    // Only react to the step changing (not to sound being switched on, or a new trace loading).
+    if (lastIndex.current === index) return
+    lastIndex.current = index
+    if (!enabled || index === 0) return
+    const frame = trace.frames[index]
+    if (index === trace.frames.length - 1 && frame.sorted.every(Boolean)) {
+      playDone()
+      return
+    }
+    const now = performance.now()
+    if (now - lastTone.current < 1000 / MAX_NOTES_PER_SECOND) return
+    lastTone.current = now
+    playTones(tonesFor(frame, maxValue))
+  }, [enabled, trace, index, maxValue])
 }
 
 export default App

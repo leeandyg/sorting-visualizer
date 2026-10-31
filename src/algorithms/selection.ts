@@ -5,7 +5,8 @@ export const selectionSort: SortAlgorithm = {
   id: 'selection',
   name: 'Selection sort',
   stable: false,
-  code: listing(`
+  code: {
+    python: listing(`
 def selection_sort(a):
     n = len(a)
     for i in range(n - 1):                      #@ outer
@@ -15,6 +16,55 @@ def selection_sort(a):
                 min_idx = j                     #@ newMin
         a[i], a[min_idx] = a[min_idx], a[i]     #@ swap
 `),
+    javascript: listing(`
+function selectionSort(a) {
+  const n = a.length;
+  for (let i = 0; i < n - 1; i++) {          #@ outer
+    let minIdx = i;                          #@ outer
+    for (let j = i + 1; j < n; j++) {
+      if (a[j] < a[minIdx]) {                #@ compare
+        minIdx = j;                          #@ newMin
+      }
+    }
+    [a[i], a[minIdx]] = [a[minIdx], a[i]];   #@ swap
+  }
+}
+`),
+    java: listing(`
+void selectionSort(int[] a) {
+  int n = a.length;
+  for (int i = 0; i < n - 1; i++) {          #@ outer
+    int minIdx = i;                          #@ outer
+    for (int j = i + 1; j < n; j++) {
+      if (a[j] < a[minIdx]) {                #@ compare
+        minIdx = j;                          #@ newMin
+      }
+    }
+    swap(a, i, minIdx);                      #@ swap
+  }
+}
+
+void swap(int[] a, int i, int j) {
+  int t = a[i]; a[i] = a[j]; a[j] = t;
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+
+void selection_sort(Vec& a) {
+  int n = a.size();
+  for (int i = 0; i < n - 1; i++) {          #@ outer
+    int min_idx = i;                         #@ outer
+    for (int j = i + 1; j < n; j++) {
+      if (a[j] < a[min_idx]) {               #@ compare
+        min_idx = j;                         #@ newMin
+      }
+    }
+    std::swap(a[i], a[min_idx]);             #@ swap
+  }
+}
+`),
+  },
   pointers: [pointer('i'), pointer('j'), pointer('min_idx')],
   *run(a: number[]): Generator<Step, void, undefined> {
     const n = a.length

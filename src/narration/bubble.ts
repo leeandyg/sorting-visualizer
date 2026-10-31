@@ -1,3 +1,4 @@
+import { literal } from '../engine/lang'
 import { range, valueAt, type Narrator } from './types'
 
 export const bubbleNarrator: Narrator = {
@@ -17,7 +18,7 @@ export const bubbleNarrator: Narrator = {
       : `pass ${i + 1}/${n - 1}, unsorted ${range(0, end, level)}`
   },
 
-  step({ frame, prev, n, level }) {
+  step({ frame, prev, n, level, lang }) {
     const step = frame.step!
     const beginner = level === 'beginner'
     switch (step.type) {
@@ -32,11 +33,11 @@ export const bubbleNarrator: Narrator = {
       }
       case 'swap': {
         const [y, x] = [valueAt(frame, step.i)!, valueAt(frame, step.j)!]
-        if (!beginner) return `swap a[${step.i}], a[${step.j}]; swapped = True`
+        if (!beginner) return `swap a[${step.i}], a[${step.j}]; swapped = ${literal(true, lang)}`
         const firstSwap = prev.vars.swapped !== true
         return (
           `Swap them: ${x} moves right to position ${step.j} and ${y} moves left to position ${step.i}.` +
-          (firstSwap ? ' This pass made a swap, so swapped is now True: the array might not be sorted yet.' : '')
+          (firstSwap ? ` This pass made a swap, so swapped is now ${literal(true, lang)}: the array might not be sorted yet.` : '')
         )
       }
       case 'markSorted': {

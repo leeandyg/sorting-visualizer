@@ -5,7 +5,8 @@ export const mergeSort: SortAlgorithm = {
   id: 'merge',
   name: 'Merge sort',
   stable: true,
-  code: listing(`
+  code: {
+    python: listing(`
 def merge_sort(a, lo, hi):
     if lo >= hi:                                #@ base
         return                                  #@ base
@@ -36,6 +37,125 @@ def merge(a, lo, mid, hi):
         j += 1                                  #@ restRight
         k += 1                                  #@ restRight
 `),
+    javascript: listing(`
+function mergeSort(a, lo, hi) {
+  if (lo >= hi) {                            #@ base
+    return;                                  #@ base
+  }
+  const mid = Math.floor((lo + hi) / 2);     #@ call
+  mergeSort(a, lo, mid);                     #@ call
+  mergeSort(a, mid + 1, hi);                 #@ call
+  merge(a, lo, mid, hi);                     #@ merge
+}
+
+function merge(a, lo, mid, hi) {
+  const left = a.slice(lo, mid + 1);         #@ copyLeft
+  const right = a.slice(mid + 1, hi + 1);    #@ copyRight
+  let i = 0, j = 0, k = lo;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {               #@ compare
+      a[k] = left[i];                        #@ takeLeft
+      i++;                                   #@ takeLeft
+    } else {
+      a[k] = right[j];                       #@ takeRight
+      j++;                                   #@ takeRight
+    }
+    k++;                                     #@ takeLeft takeRight
+  }
+  while (i < left.length) {
+    a[k] = left[i];                          #@ restLeft
+    i++;                                     #@ restLeft
+    k++;                                     #@ restLeft
+  }
+  while (j < right.length) {
+    a[k] = right[j];                         #@ restRight
+    j++;                                     #@ restRight
+    k++;                                     #@ restRight
+  }
+}
+`),
+    java: listing(`
+void mergeSort(int[] a, int lo, int hi) {
+  if (lo >= hi) {                            #@ base
+    return;                                  #@ base
+  }
+  int mid = (lo + hi) / 2;                   #@ call
+  mergeSort(a, lo, mid);                     #@ call
+  mergeSort(a, mid + 1, hi);                 #@ call
+  merge(a, lo, mid, hi);                     #@ merge
+}
+
+void merge(int[] a, int lo, int mid, int hi) {
+  int[] left =                               #@ copyLeft
+      Arrays.copyOfRange(a, lo, mid + 1);    #@ copyLeft
+  int[] right =                              #@ copyRight
+      Arrays.copyOfRange(a, mid + 1, hi + 1); #@ copyRight
+  int i = 0, j = 0, k = lo;
+  while (i < left.length && j < right.length) {
+    if (left[i] <= right[j]) {               #@ compare
+      a[k] = left[i];                        #@ takeLeft
+      i++;                                   #@ takeLeft
+    } else {
+      a[k] = right[j];                       #@ takeRight
+      j++;                                   #@ takeRight
+    }
+    k++;                                     #@ takeLeft takeRight
+  }
+  while (i < left.length) {
+    a[k] = left[i];                          #@ restLeft
+    i++;                                     #@ restLeft
+    k++;                                     #@ restLeft
+  }
+  while (j < right.length) {
+    a[k] = right[j];                         #@ restRight
+    j++;                                     #@ restRight
+    k++;                                     #@ restRight
+  }
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+void merge(Vec& a, int lo, int mid, int hi);
+
+void merge_sort(Vec& a, int lo, int hi) {
+  if (lo >= hi) {                            #@ base
+    return;                                  #@ base
+  }
+  int mid = (lo + hi) / 2;                   #@ call
+  merge_sort(a, lo, mid);                    #@ call
+  merge_sort(a, mid + 1, hi);                #@ call
+  merge(a, lo, mid, hi);                     #@ merge
+}
+
+void merge(Vec& a, int lo, int mid, int hi) {
+  Vec left(a.begin() + lo, a.begin() + mid + 1); #@ copyLeft
+  Vec right(a.begin() + mid + 1,             #@ copyRight
+            a.begin() + hi + 1);             #@ copyRight
+  int i = 0, j = 0, k = lo;
+  int nl = left.size(), nr = right.size();
+  while (i < nl && j < nr) {
+    if (left[i] <= right[j]) {               #@ compare
+      a[k] = left[i];                        #@ takeLeft
+      i++;                                   #@ takeLeft
+    } else {
+      a[k] = right[j];                       #@ takeRight
+      j++;                                   #@ takeRight
+    }
+    k++;                                     #@ takeLeft takeRight
+  }
+  while (i < nl) {
+    a[k] = left[i];                          #@ restLeft
+    i++;                                     #@ restLeft
+    k++;                                     #@ restLeft
+  }
+  while (j < nr) {
+    a[k] = right[j];                         #@ restRight
+    j++;                                     #@ restRight
+    k++;                                     #@ restRight
+  }
+}
+`),
+  },
   pointers: [pointer('k')],
   *run(a: number[]): Generator<Step, void, undefined> {
     const n = a.length

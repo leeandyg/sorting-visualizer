@@ -1,3 +1,5 @@
+import type { Lang } from './lang'
+
 /** One array element. `id` stays with the value as it moves, so the UI can animate it and tell duplicates apart. */
 export interface Item {
   id: number
@@ -126,8 +128,8 @@ export interface SortAlgorithm {
   treeView?: boolean
   /** Sorts `a` in place, yielding a Step for everything it does. */
   run: (a: number[]) => Generator<Step, void, undefined>
-  /** The Python listing shown in the code panel; Step `line` keys refer to its tags. */
-  code: CodeLine[]
+  /** The listing in each language shown in the code panel; Step `line` keys refer to its tags. */
+  code: Record<Lang, CodeLine[]>
   pointers: PointerDef[]
 }
 

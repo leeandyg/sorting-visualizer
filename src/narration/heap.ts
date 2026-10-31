@@ -1,3 +1,4 @@
+import { ident } from '../engine/lang'
 import { range, valueAt, type Narrator } from './types'
 
 export const heapNarrator: Narrator = {
@@ -19,7 +20,7 @@ export const heapNarrator: Narrator = {
       : ''
   },
 
-  step({ frame, n, level }) {
+  step({ frame, n, level, lang }) {
     const step = frame.step!
     const beginner = level === 'beginner'
     const { size, root, child, start, end } = frame.vars as Record<string, number>
@@ -28,7 +29,7 @@ export const heapNarrator: Narrator = {
         if (step.line === 'build') {
           return beginner
             ? `Fix the subtree rooted at position ${start} (value ${valueAt(frame, start)}). Work backwards from the last parent, so the subtrees below are already heaps.`
-            : `sift_down(a, ${start}, ${n})`
+            : `${ident('sift_down', lang)}(a, ${start}, ${n})`
         }
         return beginner
           ? `Position ${root} has no children inside the heap, so there is nothing below it to fix. This sift is done.`

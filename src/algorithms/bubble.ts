@@ -5,7 +5,8 @@ export const bubbleSort: SortAlgorithm = {
   id: 'bubble',
   name: 'Bubble sort',
   stable: true,
-  code: listing(`
+  code: {
+    python: listing(`
 def bubble_sort(a):
     n = len(a)
     for i in range(n - 1):                      #@ outer
@@ -17,6 +18,64 @@ def bubble_sort(a):
         if not swapped:                         #@ checkSwapped
             break                               #@ break
 `),
+    javascript: listing(`
+function bubbleSort(a) {
+  const n = a.length;
+  for (let i = 0; i < n - 1; i++) {          #@ outer
+    let swapped = false;
+    for (let j = 0; j < n - 1 - i; j++) {
+      if (a[j] > a[j + 1]) {                 #@ compare
+        [a[j], a[j + 1]] = [a[j + 1], a[j]]; #@ swap
+        swapped = true;                      #@ swap
+      }
+    }
+    if (!swapped) {                          #@ checkSwapped
+      break;                                 #@ break
+    }
+  }
+}
+`),
+    java: listing(`
+void bubbleSort(int[] a) {
+  int n = a.length;
+  for (int i = 0; i < n - 1; i++) {          #@ outer
+    boolean swapped = false;
+    for (int j = 0; j < n - 1 - i; j++) {
+      if (a[j] > a[j + 1]) {                 #@ compare
+        swap(a, j, j + 1);                   #@ swap
+        swapped = true;                      #@ swap
+      }
+    }
+    if (!swapped) {                          #@ checkSwapped
+      break;                                 #@ break
+    }
+  }
+}
+
+void swap(int[] a, int i, int j) {
+  int t = a[i]; a[i] = a[j]; a[j] = t;
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+
+void bubble_sort(Vec& a) {
+  int n = a.size();
+  for (int i = 0; i < n - 1; i++) {          #@ outer
+    bool swapped = false;
+    for (int j = 0; j < n - 1 - i; j++) {
+      if (a[j] > a[j + 1]) {                 #@ compare
+        std::swap(a[j], a[j + 1]);           #@ swap
+        swapped = true;                      #@ swap
+      }
+    }
+    if (!swapped) {                          #@ checkSwapped
+      break;                                 #@ break
+    }
+  }
+}
+`),
+  },
   pointers: [pointer('j'), pointer('j', 1)],
   *run(a: number[]): Generator<Step, void, undefined> {
     const n = a.length

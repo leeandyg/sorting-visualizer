@@ -1,4 +1,5 @@
 import type { AuxRef, Frame } from '../engine/types'
+import { ident } from '../engine/lang'
 import { range, valueAt, type Narrator } from './types'
 
 const auxValue = (frame: Frame, ref: AuxRef) => frame.aux[ref.buffer]?.items[ref.at]?.value
@@ -12,7 +13,7 @@ export const mergeNarrator: Narrator = {
     expert: 'Top-down merge sort: recursive halving, stable merge through temporary left/right copies. Θ(n log n) time in every case, Θ(n) extra space.',
   },
 
-  phase(frame, _n, level) {
+  phase(frame, _n, level, lang) {
     const { lo, mid, hi } = frame.vars
     if (typeof lo !== 'number' || typeof hi !== 'number') return ''
     const beginner = level === 'beginner'
@@ -21,8 +22,9 @@ export const mergeNarrator: Narrator = {
         ? `Merging the sorted halves ${range(lo, mid, level)} and ${range(mid + 1, hi, level)}.`
         : `merge(a, ${lo}, ${mid}, ${hi})`
     }
-    if (lo >= hi) return beginner ? `Sorting ${range(lo, lo, level)}: a single element.` : `merge_sort(a, ${lo}, ${hi})`
-    return beginner ? `Sorting ${range(lo, hi, level)}: split it in half first.` : `merge_sort(a, ${lo}, ${hi})`
+    const call = `${ident('merge_sort', lang)}(a, ${lo}, ${hi})`
+    if (lo >= hi) return beginner ? `Sorting ${range(lo, lo, level)}: a single element.` : call
+    return beginner ? `Sorting ${range(lo, hi, level)}: split it in half first.` : call
   },
 
   step({ frame, level }) {
@@ -47,12 +49,12 @@ export const mergeNarrator: Narrator = {
       case 'copyOut':
         if (step.label === 'left') {
           return beginner
-            ? `Copy the left half into a temporary list called left. The values also stay in the array (shown faded) until they get overwritten.`
-            : `left = a[${step.lo}:${step.hi + 1}]`
+            ? `Copy the left half into a temporary array called left. The values also stay in the array (shown faded) until they get overwritten.`
+            : `left = copy of a[${step.lo}..${step.hi}]`
         }
         return beginner
           ? `Copy the right half into right. Now ${range(lo, hi, level)} can be overwritten in sorted order.`
-          : `right = a[${step.lo}:${step.hi + 1}]`
+          : `right = copy of a[${step.lo}..${step.hi}]`
       case 'compareAux': {
         const [l, r] = [auxValue(frame, step.a)!, auxValue(frame, step.b)!]
         if (!beginner) return `left[${step.a.at}]=${l} ${l <= r ? '≤' : '>'} right[${step.b.at}]=${r} → take ${l <= r ? 'left' : 'right'}`

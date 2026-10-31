@@ -4,6 +4,8 @@ import './PlayerControls.css'
 interface Props {
   player: Player
   frameCount: number
+  sound: boolean
+  onToggleSound: () => void
 }
 
 // The speed slider is logarithmic so slow speeds get as much travel as fast ones.
@@ -12,7 +14,7 @@ const sliderToSpeed = (s: number) => MIN_SPEED * SPEED_RATIO ** (s / 100)
 const speedToSlider = (speed: number) => (Math.log(speed / MIN_SPEED) / Math.log(SPEED_RATIO)) * 100
 const formatSpeed = (speed: number) => (speed < 10 ? speed.toFixed(1) : Math.round(speed).toString())
 
-export function PlayerControls({ player, frameCount }: Props) {
+export function PlayerControls({ player, frameCount, sound, onToggleSound }: Props) {
   const last = Math.max(frameCount - 1, 0)
   return (
     <div className="player-controls">
@@ -55,6 +57,24 @@ export function PlayerControls({ player, frameCount }: Props) {
         />
         <span className="speed-value">{formatSpeed(player.speed)} steps/s</span>
       </label>
+
+      <button
+        type="button"
+        className={sound ? 'icon-button sound-button is-on' : 'icon-button sound-button'}
+        onClick={onToggleSound}
+        aria-pressed={sound}
+        aria-label={sound ? 'Sound on (M)' : 'Sound off (M)'}
+        title={sound ? 'Sound on (M)' : 'Sound off (M)'}
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+          {sound ? (
+            <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          ) : (
+            <path d="M16.5 9.5l5 5M21.5 9.5l-5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          )}
+        </svg>
+      </button>
     </div>
   )
 }

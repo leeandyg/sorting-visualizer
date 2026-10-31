@@ -8,7 +8,8 @@ export const quickSortLomuto: SortAlgorithm = {
   name: 'Quick sort (Lomuto)',
   family: { id: 'quick', name: 'Quick sort', variant: 'Lomuto' },
   stable: false,
-  code: listing(`
+  code: {
+    python: listing(`
 def quick_sort(a, lo, hi):
     if lo < hi:                                 #@ check
         p = partition(a, lo, hi)
@@ -25,6 +26,80 @@ def partition(a, lo, hi):
     a[i + 1], a[hi] = a[hi], a[i + 1]           #@ place
     return i + 1                                #@ place
 `),
+    javascript: listing(`
+function quickSort(a, lo, hi) {
+  if (lo < hi) {                             #@ check
+    const p = partition(a, lo, hi);
+    quickSort(a, lo, p - 1);
+    quickSort(a, p + 1, hi);
+  }
+}
+
+function partition(a, lo, hi) {
+  const pivot = a[hi];                       #@ pivot
+  let i = lo - 1;                            #@ pivot
+  for (let j = lo; j < hi; j++) {
+    if (a[j] <= pivot) {                     #@ compare
+      i++;                                   #@ swap
+      [a[i], a[j]] = [a[j], a[i]];           #@ swap
+    }
+  }
+  [a[i + 1], a[hi]] = [a[hi], a[i + 1]];     #@ place
+  return i + 1;                              #@ place
+}
+`),
+    java: listing(`
+void quickSort(int[] a, int lo, int hi) {
+  if (lo < hi) {                             #@ check
+    int p = partition(a, lo, hi);
+    quickSort(a, lo, p - 1);
+    quickSort(a, p + 1, hi);
+  }
+}
+
+int partition(int[] a, int lo, int hi) {
+  int pivot = a[hi];                         #@ pivot
+  int i = lo - 1;                            #@ pivot
+  for (int j = lo; j < hi; j++) {
+    if (a[j] <= pivot) {                     #@ compare
+      i++;                                   #@ swap
+      swap(a, i, j);                         #@ swap
+    }
+  }
+  swap(a, i + 1, hi);                        #@ place
+  return i + 1;                              #@ place
+}
+
+void swap(int[] a, int i, int j) {
+  int t = a[i]; a[i] = a[j]; a[j] = t;
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+int partition(Vec& a, int lo, int hi);
+
+void quick_sort(Vec& a, int lo, int hi) {
+  if (lo < hi) {                             #@ check
+    int p = partition(a, lo, hi);
+    quick_sort(a, lo, p - 1);
+    quick_sort(a, p + 1, hi);
+  }
+}
+
+int partition(Vec& a, int lo, int hi) {
+  int pivot = a[hi];                         #@ pivot
+  int i = lo - 1;                            #@ pivot
+  for (int j = lo; j < hi; j++) {
+    if (a[j] <= pivot) {                     #@ compare
+      i++;                                   #@ swap
+      std::swap(a[i], a[j]);                 #@ swap
+    }
+  }
+  std::swap(a[i + 1], a[hi]);                #@ place
+  return i + 1;                              #@ place
+}
+`),
+  },
   pointers: [pointer('i'), pointer('j')],
   *run(a: number[]): Generator<Step, void, undefined> {
     function* sort(lo: number, hi: number): Generator<Step, void, undefined> {
@@ -81,7 +156,8 @@ export const quickSortHoare: SortAlgorithm = {
   name: 'Quick sort (Hoare)',
   family: { id: 'quick', name: 'Quick sort', variant: 'Hoare' },
   stable: false,
-  code: listing(`
+  code: {
+    python: listing(`
 def quick_sort(a, lo, hi):
     if lo < hi:                                 #@ check
         p = partition(a, lo, hi)
@@ -103,6 +179,77 @@ def partition(a, lo, hi):
             return j                            #@ done
         a[i], a[j] = a[j], a[i]                 #@ swap
 `),
+    javascript: listing(`
+function quickSort(a, lo, hi) {
+  if (lo < hi) {                             #@ check
+    const p = partition(a, lo, hi);
+    quickSort(a, lo, p);
+    quickSort(a, p + 1, hi);
+  }
+}
+
+function partition(a, lo, hi) {
+  const pivot = a[Math.floor((lo + hi) / 2)]; #@ pivot
+  let i = lo - 1;                            #@ pivot
+  let j = hi + 1;                            #@ pivot
+  while (true) {
+    do i++; while (a[i] < pivot);            #@ scanI
+    do j--; while (a[j] > pivot);            #@ scanJ
+    if (i >= j) return j;                    #@ done
+    [a[i], a[j]] = [a[j], a[i]];             #@ swap
+  }
+}
+`),
+    java: listing(`
+void quickSort(int[] a, int lo, int hi) {
+  if (lo < hi) {                             #@ check
+    int p = partition(a, lo, hi);
+    quickSort(a, lo, p);
+    quickSort(a, p + 1, hi);
+  }
+}
+
+int partition(int[] a, int lo, int hi) {
+  int pivot = a[(lo + hi) / 2];              #@ pivot
+  int i = lo - 1;                            #@ pivot
+  int j = hi + 1;                            #@ pivot
+  while (true) {
+    do i++; while (a[i] < pivot);            #@ scanI
+    do j--; while (a[j] > pivot);            #@ scanJ
+    if (i >= j) return j;                    #@ done
+    swap(a, i, j);                           #@ swap
+  }
+}
+
+void swap(int[] a, int i, int j) {
+  int t = a[i]; a[i] = a[j]; a[j] = t;
+}
+`),
+    cpp: listing(`
+using Vec = std::vector<int>;
+int partition(Vec& a, int lo, int hi);
+
+void quick_sort(Vec& a, int lo, int hi) {
+  if (lo < hi) {                             #@ check
+    int p = partition(a, lo, hi);
+    quick_sort(a, lo, p);
+    quick_sort(a, p + 1, hi);
+  }
+}
+
+int partition(Vec& a, int lo, int hi) {
+  int pivot = a[(lo + hi) / 2];              #@ pivot
+  int i = lo - 1;                            #@ pivot
+  int j = hi + 1;                            #@ pivot
+  while (true) {
+    do i++; while (a[i] < pivot);            #@ scanI
+    do j--; while (a[j] > pivot);            #@ scanJ
+    if (i >= j) return j;                    #@ done
+    std::swap(a[i], a[j]);                   #@ swap
+  }
+}
+`),
+  },
   pointers: [pointer('i'), pointer('j')],
   *run(a: number[]): Generator<Step, void, undefined> {
     function* sort(lo: number, hi: number): Generator<Step, void, undefined> {

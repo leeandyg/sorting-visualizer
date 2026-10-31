@@ -1,4 +1,5 @@
 import { algorithms } from '../algorithms'
+import type { Lang } from '../engine/lang'
 import { duplicateTags, superscript } from '../engine/tags'
 import type { AlgorithmId, Frame, Trace } from '../engine/types'
 import { bubbleNarrator } from './bubble'
@@ -19,16 +20,16 @@ const narrators: Record<AlgorithmId, Narrator> = {
   heap: heapNarrator,
 }
 
-export function narrate(trace: Trace, index: number, level: Level): Narration {
+export function narrate(trace: Trace, index: number, level: Level, lang: Lang = 'python'): Narration {
   const narrator = narrators[trace.algorithmId]
   const frame = trace.frames[index]
   const n = trace.input.length
   if (n < 2) return { phase: '', text: 'An array with fewer than two elements is already sorted.' }
   if (!frame.step) return { phase: '', text: narrator.intro[level] }
 
-  const text = narrator.step({ frame, prev: trace.frames[index - 1], n, level })
+  const text = narrator.step({ frame, prev: trace.frames[index - 1], n, level, lang })
   const done = frame.sorted.every(Boolean)
-  if (!done) return { phase: narrator.phase(frame, n, level), text }
+  if (!done) return { phase: narrator.phase(frame, n, level, lang), text }
 
   const { comparisons, swaps, writes } = frame.counters
   const totals =
