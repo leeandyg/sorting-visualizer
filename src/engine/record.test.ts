@@ -5,6 +5,8 @@ import type { SortAlgorithm, Step } from './types'
 const fake = (steps: Step[], sortsFor = false): SortAlgorithm => ({
   id: 'bubble',
   name: 'Fake',
+  code: [],
+  pointers: [],
   *run(a) {
     if (sortsFor) a.sort((x, y) => x - y)
     yield* steps

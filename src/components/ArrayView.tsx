@@ -9,15 +9,19 @@ const LIFT = 56
 /** Approximate rendered width of one digit, in px, for value (15px) and index (12px) labels. */
 const VALUE_DIGIT_PX = 9
 const INDEX_DIGIT_PX = 7
+/** Room the "index" caption takes at the start of the index row, in px. */
+const CAPTION_PX = 40
 
 interface Props {
   frame: Frame
   maxValue: number
   /** Duration of slide animations; 0 snaps straight to the new state. */
   moveMs: number
+  /** Index variables to mark under the array, e.g. `j` and `j+1`. */
+  pointers: { label: string; index: number }[]
 }
 
-export function ArrayView({ frame, maxValue, moveMs }: Props) {
+export function ArrayView({ frame, maxValue, moveMs, pointers }: Props) {
   const n = frame.items.length
   const gap = frame.held ? frame.items.indexOf(null) : -1
   const roles = rolesById(frame)
@@ -41,6 +45,11 @@ export function ArrayView({ frame, maxValue, moveMs }: Props) {
 
   const width = `${100 / Math.max(n, 1)}%`
   const height = (value: number) => `calc((100% - 24px) * ${maxValue > 0 ? value / maxValue : 0})`
+
+  // While a bar is inspected, an "index" caption sits at the left end of the index row,
+  // moving to the right end if the revealed index would land on top of it.
+  const revealHalfPx = (String(inspected ?? 0).length * INDEX_DIGIT_PX) / 2 + 4
+  const captionOnRight = inspected !== null && (inspected + 0.5) * slotPx - revealHalfPx < CAPTION_PX
 
   const classes = ['array-view']
   if (!showValues) classes.push('compact')
@@ -95,19 +104,35 @@ export function ArrayView({ frame, maxValue, moveMs }: Props) {
       <div className="array-indices" aria-hidden="true">
         {showIndices
           ? frame.items.map((_, index) => (
-              <span key={index} className={index === inspected ? 'is-inspected' : undefined} style={{ width }}>
+              <span key={index} style={{ width }}>
                 {index}
               </span>
             ))
-          : n > 0 &&
-            (inspected === null ? (
-              // Says what this row is while its numbers are hidden.
-              <span className="index-caption">index</span>
-            ) : (
-              <span className="index-reveal" style={{ left: `${((inspected + 0.5) / n) * 100}%` }}>
-                {inspected}
-              </span>
-            ))}
+          : inspected !== null && (
+              <>
+                {/* Says what the revealed number is, since the row's other numbers are hidden. */}
+                <span className={captionOnRight ? 'index-caption on-right' : 'index-caption'}>index</span>
+                <span className="index-reveal" style={{ left: `${((inspected + 0.5) / n) * 100}%` }}>
+                  {inspected}
+                </span>
+              </>
+            )}
+      </div>
+
+      <div className="array-pointers" aria-hidden="true">
+        {pointers.map((pointer, k) => {
+          // Pointers at the same index stack downwards instead of overlapping.
+          const stack = pointers.slice(0, k).filter((other) => other.index === pointer.index).length
+          return (
+            <span
+              key={pointer.label}
+              className="pointer"
+              style={{ left: `${((pointer.index + 0.5) / n) * 100}%`, top: stack * 16 }}
+            >
+              {pointer.label}
+            </span>
+          )
+        })}
       </div>
 
       <div className="array-regions">

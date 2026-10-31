@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { record } from '../engine/record'
+import { narrate } from '../narration'
 import { algorithmList, algorithms } from '.'
 
 /** Small seeded PRNG so failures are reproducible. */
@@ -51,6 +52,31 @@ describe.each(algorithmList)('$name', (algorithm) => {
       for (let k = 1; k < items.length; k++) {
         if (items[k - 1].value === items[k].value) {
           expect(items[k - 1].id).toBeLessThan(items[k].id)
+        }
+      }
+    }
+  })
+
+  it('only uses line keys that exist in its code listing, and uses every tag', () => {
+    const tagged = new Set(algorithm.code.flatMap((line) => line.keys))
+    const used = new Set<string>()
+    for (const input of cases) {
+      for (const frame of record(algorithm, input).frames) {
+        if (frame.step?.line) used.add(frame.step.line)
+      }
+    }
+    expect([...used].filter((key) => !tagged.has(key))).toEqual([])
+    expect([...tagged].filter((key) => !used.has(key))).toEqual([])
+  })
+
+  it('narrates every frame at both levels without gaps or undefined values', () => {
+    for (const input of cases) {
+      const trace = record(algorithm, input)
+      for (let k = 0; k < trace.frames.length; k++) {
+        for (const level of ['beginner', 'expert'] as const) {
+          const { phase, text } = narrate(trace, k, level)
+          expect(text, `frame ${k} of [${input}]`).not.toBe('')
+          expect(`${phase} ${text}`).not.toMatch(/undefined|NaN|null/)
         }
       }
     }

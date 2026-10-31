@@ -62,11 +62,26 @@ export interface Frame {
 
 export type AlgorithmId = 'bubble' | 'insertion'
 
+/** One line of an algorithm's Python listing, tagged with the step `line` keys that highlight it. */
+export interface CodeLine {
+  text: string
+  keys: string[]
+}
+
+/** A labelled marker drawn under the array at an index taken from the current vars (e.g. `j`). */
+export interface PointerDef {
+  label: string
+  at: (vars: Vars) => number | undefined
+}
+
 export interface SortAlgorithm {
   id: AlgorithmId
   name: string
   /** Sorts `a` in place, yielding a Step for everything it does. */
   run: (a: number[]) => Generator<Step, void, undefined>
+  /** The Python listing shown in the code panel; Step `line` keys refer to its tags. */
+  code: CodeLine[]
+  pointers: PointerDef[]
 }
 
 export interface Trace {

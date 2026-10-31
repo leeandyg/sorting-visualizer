@@ -117,20 +117,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.array-indices span.is-inspected {
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* No room for indices: show just the inspected one, under its bar. */
+/* No room for indices: show just the inspected one, under its bar, styled like the full row. */
 .array-indices .index-reveal {
   position: absolute;
   top: 4px;
   transform: translateX(-50%);
-  padding: 0 4px;
-  color: var(--text);
-  font-weight: 600;
-  background: var(--bg);
 }
 
 .array-indices .index-caption {
@@ -142,10 +133,39 @@
   font-style: italic;
 }
 
+.array-indices .index-caption.on-right {
+  left: auto;
+  right: 0;
+}
+
+.array-pointers {
+  position: relative;
+  height: 34px;
+}
+
+.pointer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  color: var(--accent);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: left var(--move-ms) ease-in-out;
+}
+
+.pointer::before {
+  content: '▲';
+  font-size: 9px;
+}
+
 .array-regions {
   position: relative;
   height: 32px;
-  margin-top: 6px;
 }
 
 .region {
@@ -178,7 +198,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .slot,
-  .region {
+  .region,
+  .pointer {
     transition: none;
   }
 }

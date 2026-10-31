@@ -1,22 +1,22 @@
+import { listing, pointer } from '../engine/listing'
 import type { SortAlgorithm, Step } from '../engine/types'
 
-/*
-Line keys refer to this listing (shown in the code panel):
-
-def bubble_sort(a):
-    n = len(a)
-    for i in range(n - 1):                      # outer
-        swapped = False
-        for j in range(n - 1 - i):
-            if a[j] > a[j + 1]:                 # compare
-                a[j], a[j + 1] = a[j + 1], a[j] # swap
-                swapped = True
-        if not swapped:                         # checkSwapped
-            break                               # break
-*/
 export const bubbleSort: SortAlgorithm = {
   id: 'bubble',
   name: 'Bubble sort',
+  code: listing(`
+def bubble_sort(a):
+    n = len(a)
+    for i in range(n - 1):                      #@ outer
+        swapped = False
+        for j in range(n - 1 - i):
+            if a[j] > a[j + 1]:                 #@ compare
+                a[j], a[j + 1] = a[j + 1], a[j] #@ swap
+                swapped = True                  #@ swap
+        if not swapped:                         #@ checkSwapped
+            break                               #@ break
+`),
+  pointers: [pointer('j'), pointer('j', 1)],
   *run(a: number[]): Generator<Step, void, undefined> {
     const n = a.length
     for (let i = 0; i < n - 1; i++) {
@@ -38,6 +38,6 @@ export const bubbleSort: SortAlgorithm = {
       }
     }
     // After n - 1 passes the only element left, a[0], is the smallest.
-    if (n > 0) yield { type: 'markSorted', indices: [0], line: 'outer' }
+    if (n > 0) yield { type: 'markSorted', indices: [0], line: 'outer', vars: {} }
   },
 }

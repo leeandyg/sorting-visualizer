@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { algorithmList, algorithms } from './algorithms'
 import { ArrayView } from './components/ArrayView'
+import { CodePanel } from './components/CodePanel'
 import { PlayerControls } from './components/PlayerControls'
 import { MAX_SIZE, record } from './engine/record'
 import type { AlgorithmId, SortEvent, Trace } from './engine/types'
 import { parseArray, randomArray } from './input/parseArray'
-import { describeStep } from './narration/describe'
+import { narrate, type Level } from './narration'
 import { usePlayer, type Player } from './player/usePlayer'
+import { useStoredChoice } from './settings/useStoredChoice'
 import { useTheme, type ThemeChoice } from './theme/theme'
 import './App.css'
 
@@ -19,10 +21,17 @@ function App() {
   const [size, setSize] = useState(DEFAULT_INPUT.length)
   const [error, setError] = useState<string | null>(null)
   const theme = useTheme()
+  const [level, setLevel] = useStoredChoice<Level>('narration-level', ['beginner', 'expert'], 'beginner')
 
   const trace = useMemo(() => record(algorithms[algorithmId], input), [algorithmId, input])
   const player = usePlayer(trace.frames.length)
   const frame = trace.frames[player.index]
+  const algorithm = algorithms[algorithmId]
+  const narration = narrate(trace, player.index, level)
+  const pointers = algorithm.pointers.flatMap((p) => {
+    const index = p.at(frame.vars)
+    return index !== undefined && index >= 0 && index < input.length ? [{ label: p.label, index }] : []
+  })
 
   useKeyboardShortcuts(player, trace.frames.length)
 
@@ -92,14 +101,22 @@ function App() {
           Run
         </button>
 
-        <div className="random-group">
-          <label className="field">
-            <span>Size: {size}</span>
-            <input type="range" min={2} max={MAX_SIZE} value={size} onChange={(e) => setSize(Number(e.target.value))} />
-          </label>
-          <button type="button" className="button" onClick={randomize}>
-            Random
-          </button>
+        <div className="field">
+          <span>Random array</span>
+          <div className="random-group">
+            <input
+              type="range"
+              min={2}
+              max={MAX_SIZE}
+              value={size}
+              onChange={(e) => setSize(Number(e.target.value))}
+              aria-label="Random array size"
+            />
+            <SizeInput size={size} onChange={setSize} />
+            <button type="button" className="button small" onClick={randomize}>
+              Generate
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -110,32 +127,87 @@ function App() {
       </form>
 
       <section className="stage">
-        <Legend trace={trace} />
-
-        <ArrayView frame={frame} maxValue={Math.max(...input, 1)} moveMs={moveMs} />
-
-        <p className="step-text" aria-live={player.playing ? 'off' : 'polite'}>
-          {describeStep(frame)}
-        </p>
-
-        <dl className="counters">
-          <div>
-            <dt>Comparisons</dt>
-            <dd>{frame.counters.comparisons}</dd>
+        <div className="stage-top">
+          <Legend trace={trace} />
+          <div className="segmented" role="group" aria-label="Explanation detail">
+            {(['beginner', 'expert'] as const).map((option) => (
+              <button key={option} type="button" aria-pressed={level === option} onClick={() => setLevel(option)}>
+                {option === 'beginner' ? 'Beginner' : 'Expert'}
+              </button>
+            ))}
           </div>
-          <div>
-            <dt>Swaps</dt>
-            <dd>{frame.counters.swaps}</dd>
+        </div>
+
+        <div className="stage-body">
+          <div className="stage-main">
+            <ArrayView frame={frame} maxValue={Math.max(...input, 1)} moveMs={moveMs} pointers={pointers} />
+
+            <div className={`narration level-${level}`} aria-live={player.playing ? 'off' : 'polite'}>
+              {narration.phase && <p className="narration-phase">{narration.phase}</p>}
+              <p className="narration-text">{narration.text}</p>
+            </div>
+
+            <dl className="counters">
+              <div>
+                <dt>Comparisons</dt>
+                <dd>{frame.counters.comparisons}</dd>
+              </div>
+              <div>
+                <dt>Swaps</dt>
+                <dd>{frame.counters.swaps}</dd>
+              </div>
+              <div>
+                <dt>Writes</dt>
+                <dd>{frame.counters.writes}</dd>
+              </div>
+            </dl>
           </div>
-          <div>
-            <dt>Writes</dt>
-            <dd>{frame.counters.writes}</dd>
-          </div>
-        </dl>
+
+          <CodePanel code={algorithm.code} frame={frame} prev={trace.frames[player.index - 1] ?? null} />
+        </div>
       </section>
 
       <PlayerControls player={player} frameCount={trace.frames.length} />
     </main>
+  )
+}
+
+/** The random array size as text you can click and type into; applied (clamped to 2..MAX_SIZE) on Enter or blur. */
+function SizeInput({ size, onChange }: { size: number; onChange: (size: number) => void }) {
+  const [draft, setDraft] = useState<string | null>(null)
+  // Escape blurs the field too; this tells the blur handler to discard the draft instead of applying it.
+  const cancelled = useRef(false)
+  const commit = () => {
+    const typed = Number.parseInt(draft ?? '', 10)
+    if (!cancelled.current && Number.isFinite(typed)) onChange(Math.min(Math.max(typed, 2), MAX_SIZE))
+    cancelled.current = false
+    setDraft(null)
+  }
+  return (
+    <input
+      className="size-input"
+      type="text"
+      inputMode="numeric"
+      value={draft ?? String(size)}
+      onFocus={(e) => {
+        setDraft(String(size))
+        e.target.select()
+      }}
+      onChange={(e) => setDraft(e.target.value.replace(/\D/g, ''))}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        // Enter applies the size instead of submitting the form (which would Run).
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          e.currentTarget.blur()
+        } else if (e.key === 'Escape') {
+          cancelled.current = true
+          e.currentTarget.blur()
+        }
+      }}
+      aria-label="Random array size"
+      title="Click to type a size"
+    />
   )
 }
 
