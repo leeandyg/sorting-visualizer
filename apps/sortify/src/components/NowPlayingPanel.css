@@ -1,0 +1,392 @@
+.now-panel {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 0 16px 16px;
+  overflow-y: auto;
+}
+
+/* Stays put while the panel scrolls, like the playlist name above a now-playing view. */
+.panel-context {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -16px -4px;
+  padding: 16px 16px 8px;
+  background: var(--pane);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.now-panel .card {
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--raised);
+}
+
+.now-panel h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* What's playing. */
+.panel-song {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-song.is-compact .cover,
+.queue-row .cover {
+  width: 48px;
+}
+
+.panel-song-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel-song-text strong {
+  overflow: hidden;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-song.is-compact strong,
+.queue-row strong {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.panel-song-text span {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The song playing in miniature, while the main area shows the album. */
+.mini-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: clamp(120px, 22vh, 220px);
+  padding: 16px 16px 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, hsl(var(--hue) 45% 22%), hsl(var(--hue) 45% 12%));
+  cursor: pointer;
+  flex: none;
+}
+
+.mini-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(0px, 0.6%, 3px);
+  height: 100%;
+}
+
+.mini-bars i {
+  flex: 1;
+  min-width: 0;
+  border-radius: 2px 2px 0 0;
+  background: rgb(255 255 255 / 0.4);
+  transition: height 120ms;
+}
+
+.mini-bars .is-sorted {
+  background: var(--sorted);
+}
+
+.mini-bars .is-compare {
+  background: var(--compare);
+}
+
+.mini-bars .is-swap,
+.mini-bars .is-write {
+  background: var(--swap);
+}
+
+.mini-stage-open {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 28px;
+  background: rgb(0 0 0 / 0.55);
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.mini-stage:hover .mini-stage-open,
+.mini-stage:focus-visible .mini-stage-open {
+  opacity: 1;
+}
+
+/* Lyrics: the code on a card in the song's colour, the current line lit. */
+.now-panel .lyrics {
+  flex: none;
+  padding: 12px 0 8px;
+  background: hsl(var(--hue) 42% 20%);
+}
+
+.lyrics header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 12px 8px 16px;
+}
+
+.lang-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.lang-tabs button {
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.65);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-tabs button:hover {
+  color: var(--text);
+}
+
+.lang-tabs button[aria-selected='true'] {
+  background: rgb(0 0 0 / 0.3);
+  color: var(--text);
+}
+
+.lyrics-code {
+  position: relative;
+  /* Sized so the lyrics, variables and counters all show without scrolling while a song is on stage. */
+  max-height: clamp(150px, calc(100vh - 500px), 480px);
+  margin: 0;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.lyrics-code code {
+  display: inline-block;
+  min-width: 100%;
+  font: inherit;
+}
+
+.lyric {
+  padding: 0 12px 0 13px;
+  border-left: 3px solid transparent;
+  color: rgb(255 255 255 / 0.55);
+  white-space: pre;
+  transition:
+    color 120ms,
+    background-color 120ms;
+}
+
+.lyric.is-active {
+  border-left-color: var(--text);
+  background: rgb(255 255 255 / 0.13);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Syntax colours only show on the lit line; dimmed lines stay one quiet colour, like unsung lyrics. */
+.lyric.is-active .tok-keyword {
+  color: var(--tok-keyword);
+}
+
+.lyric.is-active .tok-builtin {
+  color: var(--tok-builtin);
+}
+
+.lyric.is-active .tok-number {
+  color: var(--tok-number);
+}
+
+/* Variables and counters, straight under the lyrics. */
+.panel-live {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: none;
+}
+
+.vars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+  margin: 0;
+}
+
+.var {
+  display: flex;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  background: var(--raised);
+  font-family: var(--mono);
+  font-size: 13px;
+  transition: background-color 120ms;
+}
+
+.var dt {
+  color: var(--muted);
+}
+
+.var dt::after {
+  content: ' =';
+}
+
+.var dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.var.is-changed {
+  background: var(--text);
+  color: var(--shell);
+}
+
+.var.is-changed dt {
+  color: inherit;
+}
+
+.vars-empty {
+  min-height: 28px;
+  margin: 0;
+  color: var(--faint);
+  font-size: 13px;
+  line-height: 28px;
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.counters div {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--raised);
+}
+
+.counters dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.counters dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* About the song. */
+.about p,
+.credits p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.about strong,
+.about em {
+  color: var(--text);
+}
+
+.about .about-idea {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  margin: 14px 0 0;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.08);
+}
+
+.about-stats div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--raised);
+  font-size: 13px;
+}
+
+/* Seven facts in two columns: the last one spans the row. */
+.about-stats div:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.about-stats dt {
+  color: var(--muted);
+}
+
+.about-stats dd {
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.credits dl {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.credits dt {
+  font-weight: 600;
+}
+
+.credits dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.queue-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% + 16px);
+  margin: 8px -8px -8px;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.queue-row:hover {
+  background: var(--hover);
+}

@@ -1,11 +1,11 @@
 # Sorting Visualizer
 
-Two sites for learning how sorting algorithms work, built on one shared engine.
+Two sites about how sorting algorithms work, built on one shared engine.
 
 | | |
 |---|---|
 | **[Sorting Visualizer](apps/visualizer)** | Step-by-step animations with narration and highlighted code |
-| **[Sortify](apps/sortify)** | A music-player-style take on the same idea (work in progress) |
+| **[Sortify](apps/sortify)** | A music player for the same algorithms: an album of sorts, with the code as lyrics |
 | **[`@sortviz/core`](packages/core)** | The shared engine: algorithms, step recording, narration, code listings and sound. No UI |
 
 ## Running it

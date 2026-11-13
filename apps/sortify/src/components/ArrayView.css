@@ -1,0 +1,285 @@
+.array-view {
+  /* Bar area height follows the window so the whole stage fits its pane without scrolling:
+     the 510px is everything else (top bar, playback bar, stage header, label rows, captions). */
+  --lane-height: clamp(120px, calc(100vh - 510px), 400px);
+  /* Space above the bars; insertion sort needs more for its lifted key (LIFT in ArrayView.tsx). */
+  --lift-room: 16px;
+  /* Distance from the main row's bars down to the temporary-array row: the index (24px),
+     pointer (34px) and region (32px) rows, plus the aux area's 8px top margin. */
+  --aux-gap: 98px;
+  /* Horizontal drags inspect bars; vertical drags still scroll the page. */
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.array-lane {
+  position: relative;
+  /* Above the later rows, so bars that move into the temporary-array row draw over its boxes. */
+  z-index: 1;
+  height: var(--lane-height);
+  margin-top: var(--lift-room);
+}
+
+.array-view.has-lift {
+  --lane-height: clamp(120px, calc(100vh - 558px), 360px);
+  --lift-room: 64px;
+}
+
+/* Merge sort shows two rows of bars (the array and its temporary copies), so each gets half. */
+.array-view.has-aux {
+  --lane-height: clamp(90px, calc((100vh - 540px) / 2), 220px);
+}
+
+.slot {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  transition:
+    transform var(--move-ms) ease-in-out,
+    opacity 200ms;
+}
+
+/* Outside the range the current recursive call is working on. */
+.slot.is-outside {
+  opacity: 0.3;
+}
+
+.slot.is-inspected {
+  z-index: 1;
+}
+
+.bar {
+  /* Leave a gap between neighbours: 6px when there's room, down to 1px for thin bars. */
+  width: calc(100% - clamp(1px, 16%, 6px));
+  height: var(--bar-height);
+  min-height: 6px;
+  border-radius: 6px 6px 2px 2px;
+  background: var(--bar);
+  transition:
+    background-color 120ms,
+    filter 120ms;
+}
+
+.compact .bar {
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+}
+
+.is-inspected .bar {
+  filter: var(--inspect-filter);
+}
+
+.value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 24px;
+  height: 24px;
+  white-space: nowrap;
+}
+
+/* Duplicate tags (5ᵃ, 5ᵇ), so you can see whether equal values keep their order. */
+.value sup {
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Too thin for numbers: keep the label's space so bar heights don't change, but hide it. */
+.compact .value {
+  visibility: hidden;
+}
+
+/* The inspected bar shows its value as a normal label, backed so it reads over neighbours. */
+.compact .is-inspected .value {
+  visibility: visible;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.is-sorted .bar {
+  background: var(--sorted);
+}
+
+.is-held .bar {
+  background: var(--held);
+}
+
+.is-held .value {
+  color: var(--held);
+}
+
+.is-pivot .bar,
+.is-min .bar {
+  background: var(--mark);
+}
+
+.is-pivot .value,
+.is-min .value {
+  color: var(--mark);
+}
+
+.is-compare .bar {
+  background: var(--compare);
+}
+
+.array-view:not(.compact) .is-compare .bar {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--compare);
+}
+
+/* Striped as well as colored, so moving bars stand out from compared ones without relying on hue. */
+.is-swap .bar,
+.is-write .bar {
+  background: var(--swap) var(--stripes);
+}
+
+.gap .bar {
+  background: transparent;
+  border: 2px dashed var(--border-strong);
+}
+
+/* An old value merge sort has copied out; a still holds it until it's overwritten. */
+.ghost .bar {
+  background: transparent;
+  border: 2px dashed var(--border-strong);
+  border-bottom: none;
+}
+
+.ghost .value {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.compact .ghost .value {
+  visibility: hidden;
+}
+
+.array-indices {
+  position: relative;
+  display: flex;
+  height: 24px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.array-indices span {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No room for indices: show just the inspected one, under its bar, styled like the full row. */
+.array-indices .index-reveal {
+  position: absolute;
+  top: 4px;
+  transform: translateX(-50%);
+}
+
+.array-indices .index-caption {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  color: var(--muted);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.array-indices .index-caption.on-right {
+  left: auto;
+  right: 0;
+}
+
+.array-pointers {
+  position: relative;
+  height: 34px;
+}
+
+.pointer {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%);
+  color: var(--accent);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: left var(--move-ms) ease-in-out;
+}
+
+.pointer::before {
+  content: '▲';
+  font-size: 9px;
+}
+
+.array-regions {
+  position: relative;
+  height: 32px;
+}
+
+.region {
+  position: absolute;
+  top: 0;
+  height: 8px;
+  border: 2px solid var(--muted);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  transition:
+    left var(--move-ms) ease-in-out,
+    width var(--move-ms) ease-in-out;
+}
+
+.region span {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Merge sort's temporary arrays, drawn under the positions they were copied from. */
+.aux-area {
+  position: relative;
+  height: calc(var(--lane-height) + 22px);
+  margin-top: 8px;
+}
+
+.aux-buffer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.aux-buffer span {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slot,
+  .region,
+  .pointer {
+    transition: none;
+  }
+}

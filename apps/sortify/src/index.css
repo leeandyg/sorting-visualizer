@@ -1,25 +1,192 @@
 :root {
+  /* The shell is black; panes sit on it as slightly blue-tinted slabs. */
+  --shell: #000000;
+  --pane: #0f1218;
+  --raised: #191d26;
+  --hover: #232936;
+  --menu: #232936;
+  --track: #454d5e;
+  --text: #f4f6fa;
+  --muted: #a6aebd;
+  --faint: #737b8c;
+  --accent: #4b9bff;
+  --accent-bright: #7ab5ff;
+  --on-accent: #04101f;
+  --error: #ff8a73;
+
+  /* Names the bar view and heap tree (copied from the visualizer) expect. */
+  --bg: var(--pane);
+  --surface: #171b23;
+  --border: #272c38;
+  --border-strong: #4d5567;
+  --bar: #7b8496;
+  --compare: #ffc233;
+  --swap: #ff7a5c;
+  --held: #c58bff;
+  --mark: #ff6fa5;
+  /* A value in its final place takes the accent, so a finished sort fills up in Sortify blue. */
+  --sorted: var(--accent);
+  --stripes: repeating-linear-gradient(-45deg, transparent 0 5px, rgb(255 255 255 / 0.3) 5px 8px);
+  --inspect-filter: brightness(1.35);
+
+  --tok-keyword: #c9a2ff;
+  --tok-builtin: #6fd0e0;
+  --tok-number: #ffb469;
+
+  --mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
   color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
+  font-family: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  background: #121212;
-  color: #f2f2f2;
+  overflow: hidden;
+  background: var(--shell);
+  color: var(--text);
 }
 
-.placeholder {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 48px 16px;
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
 }
 
-.placeholder p {
-  color: #a7a7a7;
+a {
+  color: inherit;
 }
 
-.placeholder li span {
-  color: #a7a7a7;
+:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+
+/* Scrolling panes: thin, quiet scrollbars that only show against the pane. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+}
+
+/* The three slabs between the top bar and the playback bar. Defined here, before any component's
+   styles, so a pane can paint its own background over the plain one. */
+.pane {
+  border-radius: 8px;
+  background: var(--pane);
+}
+
+/* Switching between the album and the stage: the new view settles in instead of popping. */
+.album,
+.stage {
+  animation: view-in 180ms ease-out;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Round icon-only buttons used all over: muted until hovered. */
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex: none;
+}
+
+.icon-button:hover {
+  color: var(--text);
+}
+
+.icon-button:active {
+  transform: scale(0.94);
+}
+
+.icon-button.is-on {
+  color: var(--accent);
+}
+
+/* A lit toggle gets a dot under it, as music players mark shuffle and repeat. */
+.icon-button.has-dot {
+  position: relative;
+}
+
+.icon-button.has-dot.is-on::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Rounded text buttons. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pill:hover {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.pill.accent {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.pill.accent:hover {
+  background: var(--accent-bright);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

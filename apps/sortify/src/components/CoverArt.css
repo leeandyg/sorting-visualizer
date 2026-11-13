@@ -1,0 +1,7 @@
+.cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--cover-radius, 4px);
+  flex: none;
+}

@@ -1,0 +1,176 @@
+.playback-bar {
+  grid-area: bar;
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 4fr) minmax(0, 3fr);
+  align-items: center;
+  gap: 16px;
+  padding: 0 8px 4px;
+}
+
+.bar-song {
+  --cover-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.bar-cover {
+  width: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  flex: none;
+}
+
+.bar-cover:hover {
+  filter: brightness(1.15);
+}
+
+.bar-song-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bar-song-text strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-song-text span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.play-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--shell);
+  cursor: pointer;
+}
+
+.play-button:hover {
+  transform: scale(1.06);
+}
+
+.play-button:active {
+  transform: scale(0.96);
+}
+
+.scrub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 640px;
+}
+
+.time {
+  min-width: 36px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.time:first-child {
+  text-align: right;
+}
+
+.bar-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.speed-button {
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.speed-button:hover {
+  color: var(--text);
+}
+
+.speed-slider {
+  width: 264px;
+  margin-bottom: 10px;
+}
+
+.speed-choices {
+  display: flex;
+  gap: 4px;
+}
+
+.speed-choices button {
+  flex: 1;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.speed-choices button:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.speed-choices button[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--shell);
+}
+
+.speed-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.volume {
+  width: 96px;
+}
+
+.like.is-on {
+  color: var(--accent);
+}

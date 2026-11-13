@@ -1,0 +1,234 @@
+.album {
+  grid-area: main;
+  overflow-y: auto;
+  /* The cover's colour washes down from the top and fades into the pane. */
+  background:
+    linear-gradient(to bottom, hsl(var(--hue) 62% 30%) 0, hsl(var(--hue) 55% 17%) 240px, var(--pane) 520px) no-repeat,
+    var(--pane);
+}
+
+.album-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 24px 24px 20px;
+}
+
+.album-head .cover {
+  --cover-radius: 6px;
+  width: clamp(120px, 17vh, 200px);
+  box-shadow: 0 8px 40px rgb(0 0 0 / 0.5);
+}
+
+.album-heading {
+  min-width: 0;
+}
+
+.album-kind {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.album-heading h1 {
+  margin: 4px 0 14px;
+  font-size: clamp(36px, 4.6vw, 68px);
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.album-meta {
+  margin: 0;
+  color: rgb(255 255 255 / 0.75);
+}
+
+.album-meta strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.album-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 24px;
+}
+
+.big-play {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+  flex: none;
+}
+
+.big-play:hover {
+  background: var(--accent-bright);
+  transform: scale(1.04);
+}
+
+.big-play:active {
+  transform: scale(0.97);
+}
+
+.album-shuffle {
+  width: 40px;
+  height: 40px;
+}
+
+.album-note {
+  margin: 0 0 0 auto;
+  max-width: 44ch;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+  text-wrap: balance;
+}
+
+.tracks {
+  width: calc(100% - 32px);
+  margin: 0 16px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tracks th {
+  padding: 0 12px 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.tracks thead tr {
+  height: 28px;
+}
+
+/* A gap between the header rule and the first song. */
+.tracks tbody::before {
+  content: '';
+  display: block;
+  height: 12px;
+}
+
+.tracks td {
+  height: 56px;
+  padding: 0 12px;
+  color: var(--muted);
+}
+
+.tracks tbody tr {
+  cursor: pointer;
+}
+
+.tracks tbody tr:hover td {
+  background: rgb(255 255 255 / 0.07);
+  color: var(--text);
+}
+
+.tracks td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.tracks td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+.tracks .col-number {
+  width: 44px;
+  padding-right: 0;
+  text-align: center;
+  font-size: 15px;
+}
+
+.tracks .col-count {
+  width: 132px;
+  text-align: right;
+}
+
+.tracks .col-time {
+  width: 76px;
+  padding-right: 20px;
+  text-align: right;
+}
+
+/* Hovering a song swaps its number for a play arrow. */
+.track-play {
+  display: none;
+  color: var(--text);
+}
+
+.tracks tbody tr:hover .track-play {
+  display: inline-grid;
+}
+
+.tracks tbody tr:hover .track-number,
+.tracks tbody tr:hover .equalizer {
+  display: none;
+}
+
+.track-title {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.track-title:hover {
+  text-decoration: underline;
+}
+
+.is-current .track-title,
+.is-current .track-number {
+  color: var(--accent);
+}
+
+.track-artist {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* Sits where a music app flags explicit lyrics; here it says how the work grows. */
+.badge {
+  padding: 0 5px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.6);
+  color: var(--shell);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.album-foot {
+  padding: 28px 28px 40px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.album-foot p {
+  margin: 0 0 2px;
+}
+
+.album-foot p:first-child {
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.album-foot a:hover {
+  color: var(--text);
+}

@@ -1,21 +1,287 @@
-import { algorithmFamilies, record } from '@sortviz/core'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { algorithms, generate, type Lang, LANGS, parseArray, playTones, record, setVolume, type Shape, SHAPES } from '@sortviz/core'
+import { AlbumView, type TrackStats } from './components/AlbumView'
+import { CoverArt } from './components/CoverArt'
+import { NowPlayingPanel } from './components/NowPlayingPanel'
+import { PlaybackBar } from './components/PlaybackBar'
+import { Sidebar } from './components/Sidebar'
+import { type Captions, StageView } from './components/StageView'
+import { TopBar } from './components/TopBar'
+import { ALBUM, artistsOf, upNextIndex } from './library/catalog'
+import { useKeyboardShortcuts } from './playback/useKeyboardShortcuts'
+import { usePlayer } from './playback/usePlayer'
+import { useStepSound } from './playback/useStepSound'
+import { readUrlState, urlFor } from './settings/urlState'
+import { useLikedArrays, useStoredNumber } from './settings/useStored'
+import { useStoredChoice } from './settings/useStoredChoice'
+import './App.css'
 
-const SAMPLE = [5, 2, 9, 1, 6, 3, 8, 4]
+/** Sixteen values: enough for a song to look and sound like something. */
+const DEFAULT_INPUT = [42, 17, 68, 9, 85, 31, 56, 24, 73, 12, 94, 38, 61, 5, 79, 47]
+/** Algorithm, array and step from a shared link, read once on load. */
+const fromUrl = readUrlState(window.location.search)
+const linkedTrack = ALBUM.tracks.findIndex((track) => track.id === fromUrl.algorithm)
+/** How long a finished song holds its last frame before the next one starts, and before a repeat. */
+const UP_NEXT_MS = 4000
+const REPEAT_MS = 1500
 
-/** Placeholder until the real Sortify UI exists: shows the shared core working from a second app. */
 function App() {
+  const [trackIndex, setTrackIndex] = useState(Math.max(linkedTrack, 0))
+  const [input, setInput] = useState(fromUrl.input ?? DEFAULT_INPUT)
+  const [text, setText] = useState(input.join(', '))
+  const [size, setSize] = useState(Math.max(input.length, 2))
+  const [shape, setShape] = useState<Shape>('random')
+  const [error, setError] = useState<string | null>(null)
+  // A link to a song opens on the stage; otherwise you land on the album.
+  const [view, setView] = useState<'album' | 'stage'>(linkedTrack >= 0 ? 'stage' : 'album')
+  const [toast, setToast] = useState<string | null>(null)
+  const [captions, setCaptions] = useStoredChoice<Captions>('sortify-captions', ['beginner', 'expert', 'off'], 'beginner')
+  const [sound, setSound] = useStoredChoice<'on' | 'off'>('sortify-sound', ['on', 'off'], 'on')
+  const [repeat, setRepeat] = useStoredChoice<'on' | 'off'>('sortify-repeat', ['on', 'off'], 'off')
+  const [volume, setVolumeLevel] = useStoredNumber('sortify-volume', 0.8, 0, 1)
+  const [lang, setLang] = useStoredChoice<Lang>(
+    'sortify-lang',
+    LANGS.map((l) => l.id),
+    'python',
+  )
+  const likes = useLikedArrays()
+
+  const track = ALBUM.tracks[trackIndex]
+  const algorithm = algorithms[track.id]
+  const trace = useMemo(() => record(algorithm, input), [algorithm, input])
+  // How every song goes on this array, for the track list. Only the numbers are kept, not the traces.
+  const stats = useMemo<TrackStats[]>(
+    () =>
+      ALBUM.tracks.map(({ id }) => {
+        const { frames } = record(algorithms[id], input)
+        const { comparisons, writes } = frames[frames.length - 1].counters
+        return { steps: frames.length - 1, comparisons, writes }
+      }),
+    [input],
+  )
+  const player = usePlayer(trace.frames.length, fromUrl.step)
+  const frame = trace.frames[player.index]
+  const maxValue = Math.max(...input, 1)
+
+  // Keep the address bar pointing at the current song and array, so a refresh or a copied URL keeps them.
+  useEffect(() => {
+    window.history.replaceState(null, '', urlFor(window.location, { algorithm: track.id, input }))
+  }, [track.id, input])
+
+  useEffect(() => {
+    document.title = player.playing ? `${track.title} • ${artistsOf(track)}` : 'Sortify'
+  }, [player.playing, track])
+
+  useEffect(() => setVolume(volume), [volume])
+
+  const flash = (message: string) => {
+    setToast(message)
+    window.setTimeout(() => setToast(null), 2500)
+  }
+
+  const share = async () => {
+    const url = urlFor(window.location, { algorithm: track.id, input, step: player.index })
+    window.history.replaceState(null, '', url)
+    try {
+      await navigator.clipboard.writeText(url)
+      flash(`Link to step ${player.index} copied`)
+    } catch {
+      flash('Copy the link from the address bar')
+    }
+  }
+
+  /** Starts a song from the top. Picking the one that's already loaded just makes sure it's playing. */
+  const playTrack = (index: number, openStage: boolean) => {
+    if (openStage) setView('stage')
+    if (index === trackIndex) {
+      if (!player.playing) player.play()
+      return
+    }
+    setTrackIndex(index)
+    player.reset(true)
+  }
+
+  const previousTrack = () => {
+    // Like a music player: a few steps in, "previous" restarts the song; right at the start, it goes back one.
+    if (player.index > 3 || trackIndex === 0) player.reset(true)
+    else playTrack(trackIndex - 1, false)
+  }
+
+  const nextTrack = () => playTrack((trackIndex + 1) % ALBUM.tracks.length, false)
+
+  const loadArray = (values: number[]) => {
+    setInput(values)
+    setText(values.join(', '))
+    setError(null)
+    player.reset(true)
+  }
+
+  const shuffle = () => loadArray(generate(shape, size))
+
+  /** Plays the array typed in the top bar. */
+  const run = (e?: FormEvent) => {
+    e?.preventDefault()
+    // Leave the text field, so Space pauses instead of typing a space into the array.
+    if (document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'text') {
+      document.activeElement.blur()
+    }
+    const parsed = parseArray(text)
+    if (parsed.error !== undefined) {
+      setError(parsed.error)
+      return
+    }
+    setError(null)
+    setInput(parsed.values)
+    player.reset(true)
+  }
+
+  const toggleSound = () => {
+    const next = sound === 'on' ? 'off' : 'on'
+    setSound(next)
+    if (next === 'off') return
+    if (volume === 0) setVolumeLevel(0.8)
+    // A soft blip confirms sound works (and starts audio, which needs a click or key press).
+    playTones([440], 90)
+  }
+
+  const changeVolume = (level: number) => {
+    setVolumeLevel(level)
+    setSound(level > 0 ? 'on' : 'off')
+  }
+
+  useKeyboardShortcuts(player, trace.frames.length, run, toggleSound)
+  useStepSound(sound === 'on', trace, player.index, maxValue)
+
+  // When a song plays through to its end, the next one (or the same one, on repeat) starts after a pause.
+  const nextIndex = upNextIndex(trackIndex, repeat === 'on')
+  const advance = () => {
+    if (nextIndex === null) return
+    if (nextIndex !== trackIndex) setTrackIndex(nextIndex)
+    player.reset(true)
+  }
+  const advanceRef = useRef(advance)
+  useEffect(() => {
+    advanceRef.current = advance
+  })
+  const waiting = player.ended && nextIndex !== null
+  const holdMs = nextIndex === trackIndex ? REPEAT_MS : UP_NEXT_MS
+  useEffect(() => {
+    if (!waiting) return
+    const timer = window.setTimeout(() => advanceRef.current(), holdMs)
+    return () => window.clearTimeout(timer)
+  }, [waiting, holdMs])
+  const upNext = waiting && nextIndex !== trackIndex ? ALBUM.tracks[nextIndex] : null
+
+  // Slides take most of a step at slow speeds; past ~30 steps/s they'd only lag, so snap instead.
+  const moveMs = player.speed >= 30 ? 0 : Math.min(350, 700 / player.speed)
+  const following = trackIndex + 1 < ALBUM.tracks.length ? ALBUM.tracks[trackIndex + 1] : null
+  const shapeLabel = SHAPES.find((s) => s.id === shape)!.label.toLowerCase()
+
   return (
-    <main className="placeholder">
-      <h1>Sortify</h1>
-      <p>Coming soon. The tracks below come straight from the shared sorting core.</p>
-      <ol>
-        {algorithmFamilies.map((family) => (
-          <li key={family.id}>
-            {family.name} <span>· {record(family.variants[0], SAMPLE).frames.length - 1} steps</span>
-          </li>
-        ))}
-      </ol>
-    </main>
+    <div className="app">
+      <TopBar
+        text={text}
+        onText={setText}
+        error={error}
+        onSubmit={run}
+        onHome={() => setView('album')}
+        atHome={view === 'album'}
+        settings={{ shape, size, onShape: setShape, onSize: setSize, onShuffle: shuffle, liked: likes.liked, onLoad: loadArray }}
+      />
+
+      <Sidebar
+        current={trackIndex}
+        playing={player.playing}
+        albumOpen={view === 'album'}
+        onOpenAlbum={() => setView('album')}
+        onPlayTrack={(index) => playTrack(index, true)}
+      />
+
+      {view === 'album' ? (
+        <AlbumView
+          stats={stats}
+          current={trackIndex}
+          playing={player.playing}
+          arraySize={input.length}
+          onTogglePlay={() => (player.playing ? player.pause() : playTrack(trackIndex, true))}
+          onPlayTrack={(index) => playTrack(index, true)}
+          onShuffle={shuffle}
+        />
+      ) : (
+        <StageView
+          track={track}
+          algorithm={algorithm}
+          trace={trace}
+          index={player.index}
+          playing={player.playing}
+          moveMs={moveMs}
+          lang={lang}
+          captions={captions}
+          onCaptions={setCaptions}
+          onBack={() => setView('album')}
+          onShare={share}
+        />
+      )}
+
+      <div className="overlays">
+        {toast && (
+          <p className="toast" role="status">
+            {toast}
+          </p>
+        )}
+        {upNext && (
+          <div className="up-next" role="status">
+            <CoverArt track={upNext} />
+            <div className="up-next-text">
+              <small>Up next</small>
+              <strong>{upNext.title}</strong>
+            </div>
+            <button type="button" className="pill accent" onClick={advance}>
+              Play now
+            </button>
+            <button type="button" className="pill" onClick={player.stay}>
+              Stay here
+            </button>
+            <span className="up-next-timer" style={{ animationDuration: `${UP_NEXT_MS}ms` }} />
+          </div>
+        )}
+      </div>
+
+      <NowPlayingPanel
+        track={track}
+        algorithm={algorithm}
+        frame={frame}
+        prev={trace.frames[player.index - 1] ?? null}
+        maxValue={maxValue}
+        lang={lang}
+        onLang={setLang}
+        level={captions === 'expert' ? 'expert' : 'beginner'}
+        onStage={view === 'stage'}
+        onOpenStage={() => setView('stage')}
+        next={following}
+        onPlayNext={nextTrack}
+      />
+
+      <PlaybackBar
+        track={track}
+        player={player}
+        frameCount={trace.frames.length}
+        onPreviousTrack={previousTrack}
+        onNextTrack={nextTrack}
+        onShuffle={shuffle}
+        shuffleMakes={`${shapeLabel}, ${size} values`}
+        repeat={repeat === 'on'}
+        onToggleRepeat={() => setRepeat(repeat === 'on' ? 'off' : 'on')}
+        liked={likes.isLiked(input)}
+        onToggleLiked={() => likes.toggle(input)}
+        sound={sound === 'on'}
+        onToggleSound={toggleSound}
+        volume={volume}
+        onVolume={changeVolume}
+        onStage={view === 'stage'}
+        onToggleStage={() => setView(view === 'stage' ? 'album' : 'stage')}
+      />
+    </div>
   )
 }
 
