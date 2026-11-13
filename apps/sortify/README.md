@@ -5,6 +5,8 @@ and pressing play sorts an array: the bars are the video, the notes are the musi
 by as lyrics. It is the playful sibling of the [Sorting Visualizer](../visualizer), built on the same
 engine. Not affiliated with Spotify.
 
+Live at https://sortify.andygl.com.
+
 ## What's in it
 
 - **The album:** seven songs (bubble, selection, insertion, merge, quick, quick's Lomuto remix, heap),
