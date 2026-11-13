@@ -47,10 +47,22 @@ export const NOTE_MS = 110
 
 let context: AudioContext | null = null
 let output: AudioNode | null = null
+let master: GainNode | null = null
+let volume = 1
+
+/** Loudness of everything played from here on, from 0 (silent) to 1 (the default). */
+export function setVolume(value: number) {
+  volume = Math.min(Math.max(value, 0), 1)
+  if (master) master.gain.value = volume
+}
+
+export function getVolume(): number {
+  return volume
+}
 
 /**
  * Created on first use, which is always after a click or key press, as browsers require.
- * Notes go through a limiter so overlapping ones can't distort.
+ * Notes go through a limiter so overlapping ones can't distort, then the volume.
  */
 function audio(): { ctx: AudioContext; out: AudioNode } {
   if (!context || !output) {
@@ -58,7 +70,9 @@ function audio(): { ctx: AudioContext; out: AudioNode } {
     const limiter = context.createDynamicsCompressor()
     limiter.threshold.value = -12
     limiter.ratio.value = 12
-    limiter.connect(context.destination)
+    master = context.createGain()
+    master.gain.value = volume
+    limiter.connect(master).connect(context.destination)
     output = limiter
   }
   if (context.state === 'suspended') void context.resume()

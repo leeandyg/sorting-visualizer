@@ -40,4 +40,4 @@ export { generate, SHAPES, type Shape } from './input/generate'
 export { parseArray, MAX_VALUE, type ParseResult } from './input/parseArray'
 
 // Sound
-export { playTones, playDone, tonesFor, valueToFrequency, NOTE_MS } from './sound/sound'
+export { playTones, playDone, tonesFor, valueToFrequency, setVolume, getVolume, NOTE_MS } from './sound/sound'

@@ -3,6 +3,7 @@ import { LANGS, type Lang } from '../engine/lang'
 import { record } from '../engine/record'
 import { narrate } from '../narration'
 import { algorithmList, algorithms } from '.'
+import { info } from './info'
 
 /** Small seeded PRNG so failures are reproducible. */
 function mulberry32(seed: number) {
@@ -103,6 +104,17 @@ describe.each(algorithmList)('$name', (algorithm) => {
       })
     }
     expect(problems.slice(0, 5)).toEqual([])
+  })
+})
+
+describe('credits', () => {
+  it('every algorithm says where it came from', () => {
+    for (const algorithm of algorithmList) {
+      const { credits } = info[algorithm.id]
+      expect(credits.note.length, algorithm.id).toBeGreaterThan(20)
+      // A year only makes sense with someone to credit it to.
+      if (credits.year !== undefined) expect(credits.by.length, algorithm.id).toBeGreaterThan(0)
+    }
   })
 })
 

@@ -4,7 +4,7 @@ import { range, valueAt, type Narrator } from './types'
 export const heapNarrator: Narrator = {
   intro: {
     beginner:
-      'Heap sort first rearranges the array into a max-heap: a binary tree (drawn below the bars) where every parent is at least as big as its children, ' +
+      'Heap sort first rearranges the array into a max-heap: a binary tree (shown in the tree view) where every parent is at least as big as its children, ' +
       'so the largest value sits at the root, position 0. The children of position i are at 2i + 1 and 2i + 2. ' +
       'Then it repeatedly swaps the root to the end, shrinks the heap by one, and repairs the heap. Press play to start.',
     expert: 'Heap sort: bottom-up heapify, then n − 1 extract-max steps with sift-down. Θ(n log n) worst case, in place, not stable.',

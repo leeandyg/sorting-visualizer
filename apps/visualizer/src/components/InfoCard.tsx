@@ -50,6 +50,9 @@ export function InfoCard({ algorithm, level }: { algorithm: SortAlgorithm; level
       <p>
         <strong>Where it's used.</strong> {facts.usedFor}
       </p>
+      <p>
+        <strong>History.</strong> {facts.credits.note}
+      </p>
 
       {level === 'beginner' && (
         <p className="info-glossary">
