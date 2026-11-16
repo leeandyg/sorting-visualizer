@@ -1,4 +1,7 @@
-# Sortify
+
+
+<img width="60" height="60" alt="favicon" src="./public/favicon.svg" />
+<h1>Sortify</h1>
 
 Experience sorting like never before. Not with one, but **two** senses.
 
@@ -7,6 +10,9 @@ Built for mathematicians struggling to write their theses.
 Best for long walks in the park, midnight strokes of inspiration, and discovering the essence of the universe with a piece of chalk.
 
 Live at https://sortify.andygl.com.
+
+<img width="1504" height="823" alt="Screenshot 2026-11-16 at 12 39 54 AM" src="https://github.com/user-attachments/assets/4b15cd34-b05d-4317-9410-1133fa3f52cd" />
+
 
 (Actually learn the sorting algorithms at [Sorting Visualizer](../visualizer), built on the same
 engine)
