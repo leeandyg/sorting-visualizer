@@ -15,13 +15,43 @@
   font-weight: 700;
 }
 
+.library-filters {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 10px;
+}
+
+.filter-chip {
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.filter-chip:hover {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.filter-chip[aria-pressed='true'] {
+  background: var(--text);
+  color: var(--shell);
+}
+
+.library-list,
+.library-songs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .library-list {
   flex: 1;
   min-height: 0;
-  margin: 0;
   padding: 0 8px;
   overflow-y: auto;
-  list-style: none;
 }
 
 .library-row {
@@ -48,6 +78,71 @@
 
 .library-row .cover {
   width: 48px;
+}
+
+/* The triangle sits on the album row, outside its button (buttons can't hold buttons). */
+.album-row-wrap {
+  position: relative;
+}
+
+.album-row-wrap .library-row {
+  padding-right: 40px;
+}
+
+.album-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  margin-top: -14px;
+}
+
+.album-toggle:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.album-toggle svg {
+  transition: transform 160ms ease;
+}
+
+/* Points right while the songs are hidden, down once they show, like a library folder. */
+.album-toggle[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+
+/* The album's songs hang off it: indented, smaller, with a thin guide line down from the album cover. */
+.library-songs.is-nested {
+  position: relative;
+  margin: 2px 0 6px 20px;
+  padding-left: 12px;
+}
+
+.library-songs.is-nested::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 12px;
+  left: 11px;
+  width: 1px;
+  background: rgb(255 255 255 / 0.14);
+}
+
+.is-nested .song-row {
+  gap: 10px;
+  padding: 5px 8px;
+}
+
+.is-nested .song-row .cover {
+  width: 32px;
+}
+
+.library-songs.is-nested .song-row strong {
+  font-size: 14px;
+}
+
+.library-songs.is-nested .song-row small {
+  font-size: 12px;
 }
 
 .library-text {
@@ -103,10 +198,13 @@
   color: var(--faint);
 }
 
-/* On narrower windows the library becomes a rail of covers, so the stage keeps its width. */
+/* On narrower windows the library becomes a rail of covers, so the stage keeps its width.
+   The album's songs stay grouped under it: smaller covers inside a faint tray, with the
+   chevron as a small tab beneath the album cover. */
 @media (max-width: 1359px) {
   .sidebar-label,
   .library-text,
+  .library-filters,
   .library-row .equalizer {
     display: none;
   }
@@ -123,6 +221,43 @@
   .library-row {
     justify-content: center;
     padding: 6px;
+  }
+
+  .album-row-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .album-row-wrap .library-row {
+    padding-right: 6px;
+  }
+
+  .album-toggle {
+    position: static;
+    width: 40px;
+    height: 18px;
+    margin: 0;
+    border-radius: 9px;
+  }
+
+  .library-songs.is-nested {
+    margin: 2px 6px 8px;
+    padding: 4px 0;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 0.05);
+  }
+
+  .library-songs.is-nested::before {
+    display: none;
+  }
+
+  .is-nested .song-row {
+    padding: 4px;
+  }
+
+  .library-songs.is-nested .song-row .cover {
+    width: 36px;
   }
 
   .library-row.is-loaded .cover {

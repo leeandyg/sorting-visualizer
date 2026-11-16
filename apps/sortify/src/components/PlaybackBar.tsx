@@ -1,6 +1,6 @@
 import { artistsOf, type Track } from '../library/catalog'
-import { formatSpeed, formatTime } from '../library/format'
-import { MAX_SPEED, MIN_SPEED, type Player, SPEED_STEPS } from '../playback/usePlayer'
+import { formatSpeed, formatSpeedValue, formatTime } from '../library/format'
+import { type Player, SPEED_STEPS } from '../playback/usePlayer'
 import { CoverArt } from './CoverArt'
 import { Icon, type IconName } from './Icon'
 import { Popover } from './Popover'
@@ -26,13 +26,13 @@ interface Props {
   onVolume: (volume: number) => void
   onStage: boolean
   onToggleStage: () => void
+  /** The full-screen lyrics view is open in the main area. */
+  lyricsOpen?: boolean
+  onToggleLyrics?: () => void
 }
 
-// The speed slider is logarithmic so slow speeds get as much travel as fast ones.
-const SPEED_RATIO = MAX_SPEED / MIN_SPEED
-const sliderToSpeed = (s: number) => MIN_SPEED * SPEED_RATIO ** (s / 100)
-const speedToSlider = (speed: number) => (Math.log(speed / MIN_SPEED) / Math.log(SPEED_RATIO)) * 100
-/** The speeds offered as one-click choices; the slider and the − / = keys reach the rest. */
+/** The speeds in the menu: roughly doubling, so eight rows span the whole range.
+ *  The − / = keys also reach the in-between steps (1.5×, 3×, 6×…). */
 const SPEED_CHOICES = SPEED_STEPS.filter((s) => [0.5, 1, 2, 4, 8, 16, 50, 100].includes(s))
 
 /** The bar along the bottom: what's playing, the transport and progress, and speed and volume. */
@@ -69,6 +69,44 @@ export function PlaybackBar(props: Props) {
 
       <div className="bar-center">
         <div className="transport">
+          {/* Hangs off the left of the transport rather than sitting in it, so the play button stays
+              dead centre under the timeline whatever width the speed label has. */}
+          <div className="bar-speed">
+            <Popover
+              button={
+                <>
+                  {formatSpeedValue(player.speed)}
+                  <small>×</small>
+                </>
+              }
+              label={`Playback speed: ${formatSpeed(player.speed)} (− and = keys)`}
+              buttonClass="speed-button"
+              placement="above-center"
+            >
+              {(close) => (
+                <>
+                  <h3>Playback speed</h3>
+                  <div className="menu-list speed-list">
+                    {SPEED_CHOICES.map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        aria-pressed={player.speed === choice}
+                        onClick={() => {
+                          player.setSpeed(choice)
+                          close()
+                        }}
+                      >
+                        {formatSpeed(choice)}
+                        {player.speed === choice && <Icon name="check" size={16} />}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="speed-note">1× plays one step a second.</p>
+                </>
+              )}
+            </Popover>
+          </div>
           <Control icon="shuffle" label={`Shuffle: play a new array (${props.shuffleMakes})`} onClick={props.onShuffle} />
           <Control icon="previous" label="Previous song" onClick={props.onPreviousTrack} />
           <Control icon="stepBack" label="Step back (←, Shift+← for 5)" onClick={player.stepBack} />
@@ -79,7 +117,7 @@ export function PlaybackBar(props: Props) {
             aria-label={player.playing ? 'Pause (Space)' : 'Play (Space)'}
             title={player.playing ? 'Pause (Space)' : 'Play (Space)'}
           >
-            <Icon name={player.playing ? 'pause' : 'play'} size={18} />
+            <Icon name={player.playing ? 'pause' : 'play'} size={16} />
           </button>
           <Control icon="stepForward" label="Step forward (→, Shift+→ for 5)" onClick={player.stepForward} />
           <Control icon="next" label="Next song" onClick={props.onNextTrack} />
@@ -113,32 +151,18 @@ export function PlaybackBar(props: Props) {
       </div>
 
       <div className="bar-end">
-        <Popover
-          button={formatSpeed(player.speed)}
-          label="Playback speed (− and = keys)"
-          buttonClass="speed-button"
-          placement="above-end"
-        >
-          <h3>Playback speed</h3>
-          <div className="speed-slider">
-            <Slider
-              value={Math.round(speedToSlider(player.speed))}
-              min={0}
-              max={100}
-              onChange={(s) => player.setSpeed(sliderToSpeed(s))}
-              label="Playback speed"
-              valueText={`${formatSpeed(player.speed)}, ${player.speed < 10 ? player.speed.toFixed(1) : Math.round(player.speed)} steps per second`}
-            />
-          </div>
-          <div className="speed-choices">
-            {SPEED_CHOICES.map((choice) => (
-              <button key={choice} type="button" aria-pressed={player.speed === choice} onClick={() => player.setSpeed(choice)}>
-                {formatSpeed(choice)}
-              </button>
-            ))}
-          </div>
-          <p className="speed-note">1× plays one step a second.</p>
-        </Popover>
+        {props.onToggleLyrics && (
+          <button
+            type="button"
+            className={props.lyricsOpen ? 'icon-button has-dot is-on' : 'icon-button has-dot'}
+            onClick={props.onToggleLyrics}
+            aria-pressed={props.lyricsOpen ?? false}
+            aria-label="Lyrics"
+            title={props.lyricsOpen ? 'Close the lyrics' : 'Lyrics'}
+          >
+            <Icon name="lyrics" />
+          </button>
+        )}
         <button
           type="button"
           className={props.sound ? 'icon-button' : 'icon-button is-muted'}
@@ -157,7 +181,12 @@ export function PlaybackBar(props: Props) {
           onChange={(v) => props.onVolume(v / 100)}
           label="Volume"
         />
-        <Control icon="expand" label={props.onStage ? 'Back to the album' : 'Open the stage'} onClick={props.onToggleStage} />
+        {/* Full screen in, minimise out: the stage is this app's full-screen player. */}
+        <Control
+          icon={props.onStage ? 'exitFullscreen' : 'fullscreen'}
+          label={props.onStage ? 'Leave the stage (Esc)' : 'Open the stage'}
+          onClick={props.onToggleStage}
+        />
       </div>
     </footer>
   )

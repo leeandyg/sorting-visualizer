@@ -132,100 +132,13 @@
   opacity: 1;
 }
 
-/* Lyrics: the code on a card in the song's colour, the current line lit. */
-.now-panel .lyrics {
-  flex: none;
-  padding: 12px 0 8px;
-  background: hsl(var(--hue) 42% 20%);
-}
-
-.lyrics header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0 12px 8px 16px;
-}
-
-.lang-tabs {
-  display: flex;
-  gap: 2px;
-}
-
-.lang-tabs button {
-  height: 24px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 12px;
-  background: transparent;
-  color: rgb(255 255 255 / 0.65);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.lang-tabs button:hover {
-  color: var(--text);
-}
-
-.lang-tabs button[aria-selected='true'] {
-  background: rgb(0 0 0 / 0.3);
-  color: var(--text);
-}
-
-.lyrics-code {
-  position: relative;
-  /* Sized so the lyrics, variables and counters all show without scrolling while a song is on stage. */
-  max-height: clamp(150px, calc(100vh - 500px), 480px);
-  margin: 0;
-  overflow: auto;
-  font-family: var(--mono);
-  font-size: 12px;
-  line-height: 1.75;
-}
-
-.lyrics-code code {
-  display: inline-block;
-  min-width: 100%;
-  font: inherit;
-}
-
-.lyric {
-  padding: 0 12px 0 13px;
-  border-left: 3px solid transparent;
-  color: rgb(255 255 255 / 0.55);
-  white-space: pre;
-  transition:
-    color 120ms,
-    background-color 120ms;
-}
-
-.lyric.is-active {
-  border-left-color: var(--text);
-  background: rgb(255 255 255 / 0.13);
-  color: var(--text);
-  font-weight: 600;
-}
-
-/* Syntax colours only show on the lit line; dimmed lines stay one quiet colour, like unsung lyrics. */
-.lyric.is-active .tok-keyword {
-  color: var(--tok-keyword);
-}
-
-.lyric.is-active .tok-builtin {
-  color: var(--tok-builtin);
-}
-
-.lyric.is-active .tok-number {
-  color: var(--tok-number);
-}
-
-/* Variables and counters, straight under the lyrics. */
-.panel-live {
+/* Variables and counters, straight under the lyrics so they show while a song is on stage. */
+.now-panel .panel-live {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: none;
+  padding: 14px 16px;
 }
 
 .vars {
@@ -241,7 +154,7 @@
   gap: 6px;
   padding: 3px 10px;
   border-radius: 14px;
-  background: var(--raised);
+  background: var(--hover);
   font-family: var(--mono);
   font-size: 13px;
   transition: background-color 120ms;
@@ -282,12 +195,8 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin: 0;
-}
-
-.counters div {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--raised);
+  padding-top: 10px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
 }
 
 .counters dt {
@@ -302,9 +211,400 @@
   font-variant-numeric: tabular-nums;
 }
 
+
+/* Shared card pieces: a title row with a quiet link on the right, like "Show all". */
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.now-panel .text-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.now-panel .text-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* An outline pill that links out, where a music app puts "Follow". */
+.outline-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  flex: none;
+  transition:
+    border-color 120ms,
+    transform 120ms;
+}
+
+.outline-pill:hover {
+  border-color: var(--text);
+  transform: scale(1.04);
+}
+
+/* The cover on the stage opens the enlarged cover. */
+.panel-cover {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: zoom-in;
+  flex: none;
+  transition: transform 120ms;
+}
+
+.panel-cover:hover {
+  transform: scale(1.05);
+}
+
+.panel-cover .cover {
+  width: 48px;
+}
+
+/* Lyrics preview: the code on a card in the song's colour. The line being run sits at the top,
+   big and white; the lines still to come wait below in dark type and fade out. */
+.now-panel .lyrics-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: none;
+  background: hsl(var(--hue) 52% 36%);
+}
+
+.lyrics-preview header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-right: -6px;
+}
+
+.lang-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.lang-tabs button {
+  height: 24px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lang-tabs button:hover {
+  color: var(--text);
+}
+
+.lang-tabs button[aria-selected='true'] {
+  background: rgb(0 0 0 / 0.28);
+  color: var(--text);
+}
+
+.preview-window {
+  position: relative;
+  /* Five lines or so; shrinks on short windows so the counters below still show on the stage. */
+  height: clamp(110px, calc(100vh - 580px), 160px);
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+
+.preview-window.is-link {
+  cursor: pointer;
+}
+
+.preview-track {
+  display: block;
+  transition: transform 260ms ease;
+}
+
+.preview-line {
+  display: block;
+  /* Indentation as a margin, so the big type keeps its width; wrapped parts hang under the text. */
+  padding-left: calc(var(--level) * 18px + 1.2em);
+  text-indent: -1.2em;
+  color: rgb(0 0 0 / 0.62);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  transition: color 200ms;
+}
+
+.preview-line.is-blank {
+  height: 0.5em;
+}
+
+.preview-line.is-active {
+  color: var(--text);
+}
+
+.preview-window.is-link:hover .preview-line:not(.is-active) {
+  color: rgb(0 0 0 / 0.75);
+}
+
+.lyrics-open {
+  align-self: flex-start;
+  background: rgb(0 0 0 / 0.28);
+}
+
+.lyrics-open:hover {
+  background: rgb(0 0 0 / 0.4);
+}
+
+/* About the artist: a photo of each billed person in a wide frame, or the song's cover where there's none. */
+.now-panel .artist {
+  padding: 0;
+  overflow: hidden;
+  flex: none;
+}
+
+.artist-art {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--raised);
+}
+
+/* Every slide stays mounted and cross-fades, so a gallery's next photo is already loaded. */
+.artist-slide {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms;
+}
+
+.artist-slide.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.artist-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The square cover centred in the wide frame (vertical margins in % are of the width). */
+.artist-slide .cover {
+  margin-top: -18.75%;
+  border-radius: 0;
+}
+
+/* The photo credit (or, on a gallery's cover slide, whose slide it is), small along the bottom. */
+.artist-slide figcaption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 20px 48px 8px 12px;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.6), transparent);
+  color: rgb(255 255 255 / 0.78);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.artist-slide figcaption.is-name {
+  color: rgb(255 255 255 / 0.9);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.artist-slide figcaption a {
+  text-decoration: none;
+}
+
+.artist-slide figcaption a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.artist-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.7), transparent 45%);
+  pointer-events: none;
+}
+
+.artist-art h3 {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+}
+
+/* Gallery arrows for songs billed to more than one person: shown on hover or keyboard focus. */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  color: #fff;
+  opacity: 0;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    opacity 150ms,
+    background 120ms,
+    transform 120ms;
+}
+
+.gallery-arrow[hidden] {
+  display: none;
+}
+
+.gallery-arrow.is-prev {
+  left: 10px;
+}
+
+.gallery-arrow.is-next {
+  right: 10px;
+}
+
+.artist-art:hover .gallery-arrow,
+.artist-art:has(:focus-visible) .gallery-arrow {
+  opacity: 1;
+}
+
+.gallery-arrow:hover {
+  background: rgb(0 0 0 / 0.8);
+  transform: translateY(-50%) scale(1.06);
+}
+
+/* Without hover (touch), the arrows can't wait to be revealed. */
+@media (hover: none) {
+  .gallery-arrow {
+    opacity: 1;
+  }
+}
+
+.gallery-dots {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  z-index: 2;
+  display: flex;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.gallery-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.4);
+  transition: background 220ms;
+}
+
+.gallery-dots i.is-shown {
+  background: #fff;
+}
+
+.artist-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.artist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* In a gallery, the person whose picture is up gets a soft backing. Every row carries the padding
+   (cancelled by the margin) so nothing moves when the highlight changes. */
+.artist.is-gallery .artist-row {
+  margin: -6px -10px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 220ms;
+}
+
+.artist-row.is-shown {
+  background: rgb(255 255 255 / 0.07);
+}
+
+.artist-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.artist-name strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.artist-name span {
+  color: var(--muted);
+}
+
+.artist-bio {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.artist-bio.is-open {
+  display: block;
+}
+
+.artist .text-link {
+  align-self: flex-start;
+  margin-top: -6px;
+  color: var(--text);
+}
+
 /* About the song. */
+.now-panel .about {
+  flex: none;
+}
+
 .about p,
-.credits p {
+.credits-more p {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 13px;
@@ -356,21 +656,42 @@
   white-space: nowrap;
 }
 
-.credits dl {
+.about-more {
+  margin-top: 16px;
+}
+
+/* Credits. */
+.now-panel .credits {
+  flex: none;
+}
+
+.credit-rows {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 12px 0 0;
+  gap: 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
 }
 
-.credits dt {
-  font-weight: 600;
+.credit-rows li {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.credits dd {
-  margin: 0;
+.credit-name {
+  font-size: 16px;
+}
+
+.credit-role {
   color: var(--muted);
   font-size: 13px;
+}
+
+/* Next in queue. */
+.now-panel .queue {
+  flex: none;
 }
 
 .queue-row {

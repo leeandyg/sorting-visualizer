@@ -3,9 +3,16 @@ import { nextSpeed, type Player } from './usePlayer'
 
 /**
  * The same keys as the Sorting Visualizer. Space: play/pause, Enter: play the array in the field,
- * ←/→: step (Shift: 5 steps), Q: start, E: end, −/=: slower/faster, M: sound. Ignored while typing in a field.
+ * ←/→: step (Shift: 5 steps), Q: start, E: end, −/=: slower/faster, M: sound, Esc: back out of the
+ * stage or lyrics. Ignored while typing in a field.
  */
-export function useKeyboardShortcuts(player: Player, frameCount: number, run: () => void, toggleSound: () => void) {
+export function useKeyboardShortcuts(
+  player: Player,
+  frameCount: number,
+  run: () => void,
+  toggleSound: () => void,
+  onEscape: () => void,
+) {
   // Which element got focus from a click: the last interaction before the focus change was a
   // pointer press rather than a key (like Tab). Browsers mark even clicked buttons :focus-visible
   // once a key is pressed, so track it here. Refs, because the listeners are re-attached every render.
@@ -40,7 +47,9 @@ export function useKeyboardShortcuts(player: Player, frameCount: number, run: ()
           // (Tab) keeps Enter for itself; one that only has focus because it was clicked doesn't.
           const keyboardFocused =
             e.target instanceof HTMLElement && e.target.matches('button, a') && e.target !== clickFocused.current
-          if (e.shiftKey || keyboardFocused) return
+          // Inside a modal (the enlarged cover) Enter belongs to the dialog, never to the array field.
+          const inDialog = e.target instanceof HTMLElement && e.target.closest('dialog[open]') !== null
+          if (e.shiftKey || keyboardFocused || inDialog) return
           e.preventDefault()
           run()
           break
@@ -63,6 +72,11 @@ export function useKeyboardShortcuts(player: Player, frameCount: number, run: ()
         case 'E':
           e.preventDefault()
           player.seek(frameCount - 1)
+          break
+        case 'Escape':
+          // An open menu or the enlarged cover takes Esc first (they mark it handled or own the focus).
+          if (e.defaultPrevented || (e.target instanceof HTMLElement && e.target.closest('dialog[open]'))) return
+          onEscape()
           break
         case 'm':
         case 'M':
@@ -95,5 +109,5 @@ export function useKeyboardShortcuts(player: Player, frameCount: number, run: ()
       window.removeEventListener('pointerdown', onPointerDown, true)
       window.removeEventListener('focusin', onFocusIn)
     }
-  }, [player, frameCount, run, toggleSound])
+  }, [player, frameCount, run, toggleSound, onEscape])
 }

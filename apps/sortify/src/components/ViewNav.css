@@ -1,0 +1,33 @@
+/* Sits over the top-left corner of whichever view fills the main area; each view leaves it room. */
+.view-nav {
+  grid-area: main;
+  align-self: start;
+  justify-self: start;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 0 16px;
+}
+
+.view-nav button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.55);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.view-nav button:hover:not(:disabled) {
+  background: rgb(0 0 0 / 0.75);
+}
+
+/* Like a music app: an arrow with nowhere to go stays in place, just dimmed. */
+.view-nav button:disabled {
+  color: rgb(255 255 255 / 0.35);
+  cursor: default;
+}

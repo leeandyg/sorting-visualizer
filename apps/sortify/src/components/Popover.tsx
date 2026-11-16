@@ -24,7 +24,10 @@ export function Popover({ button, label, buttonClass, placement = 'below-end', c
       if (!root.contains(e.target as Node)) setOpen(false)
     }
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key !== 'Escape') return
+      // Handled: the page's own Esc (leave the stage) must not fire on the same press.
+      e.preventDefault()
+      setOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)

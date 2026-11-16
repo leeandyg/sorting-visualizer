@@ -1,0 +1,75 @@
+/* Fills the window, so a click anywhere around the figure lands on the dialog itself and closes it. */
+.lightbox {
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  animation: lightbox-in 160ms ease-out;
+}
+
+.lightbox:not([open]) {
+  display: none;
+}
+
+.lightbox::backdrop {
+  background: rgb(0 0 0 / 0.82);
+}
+
+.lightbox-figure {
+  --cover-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+}
+
+.lightbox-figure .cover {
+  width: min(64vh, 70vw, 640px);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.7);
+}
+
+.lightbox-figure figcaption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.lightbox-figure strong {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.lightbox-figure span {
+  color: var(--muted);
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  background: rgb(255 255 255 / 0.08);
+  color: var(--text);
+}
+
+.lightbox-close:hover {
+  background: rgb(255 255 255 / 0.16);
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}

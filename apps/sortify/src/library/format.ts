@@ -20,8 +20,12 @@ export function formatLength(steps: number): string {
 
 /** Speed as a multiplier, as podcast players show it: 0.5×, 1.5×, 4×, 25×. */
 export function formatSpeed(speed: number): string {
-  const rounded = speed < 10 ? Math.round(speed * 10) / 10 : Math.round(speed)
-  return `${rounded}×`
+  return `${formatSpeedValue(speed)}×`
+}
+
+/** Just the number of `formatSpeed`, for the bar's speed button, which draws its × smaller. */
+export function formatSpeedValue(speed: number): string {
+  return String(speed < 10 ? Math.round(speed * 10) / 10 : Math.round(speed))
 }
 
 /** 1,234 */

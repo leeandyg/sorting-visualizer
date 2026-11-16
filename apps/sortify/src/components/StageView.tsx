@@ -1,6 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import { duplicateTags, ident, type Lang, type Level, type MarkKind, narrate, type SortAlgorithm, type SortEvent, type Trace } from '@sortviz/core'
-import { artistsOf, type Track } from '../library/catalog'
+import { ALBUM, type Track } from '../library/catalog'
+import { ArtistLinks } from './ArtistLinks'
 import { ArrayView } from './ArrayView'
 import { HeapTree } from './HeapTree'
 import { Icon } from './Icon'
@@ -21,7 +22,7 @@ interface Props {
   lang: Lang
   captions: Captions
   onCaptions: (captions: Captions) => void
-  onBack: () => void
+  onOpenAlbum: () => void
   onShare: () => void
 }
 
@@ -32,7 +33,7 @@ const CAPTION_OPTIONS: { id: Captions; label: string; hint: string }[] = [
 ]
 
 /** The song on stage: the array as bars, with captions saying what each step does. */
-export function StageView({ track, algorithm, trace, index, playing, moveMs, lang, captions, onCaptions, onBack, onShare }: Props) {
+export function StageView({ track, algorithm, trace, index, playing, moveMs, lang, captions, onCaptions, onOpenAlbum, onShare }: Props) {
   const frame = trace.frames[index]
   const tags = useMemo(() => duplicateTags(trace.input), [trace])
   const hasAux = useMemo(() => trace.frames.some((f) => f.aux.length > 0), [trace])
@@ -52,12 +53,20 @@ export function StageView({ track, algorithm, trace, index, playing, moveMs, lan
   return (
     <section className={classes.join(' ')} style={{ '--hue': track.hue } as CSSProperties} aria-label={`${track.title}, now playing`}>
       <header className="stage-head">
-        <button type="button" className="icon-button stage-back" onClick={onBack} aria-label="Back to the album" title="Back to the album">
-          <Icon name="chevronDown" size={24} />
-        </button>
         <div className="stage-title">
-          <h1>{track.title}</h1>
-          <p>{artistsOf(track)}</p>
+          {/* Where the song comes from, as music apps label the player; the name leads back to it. */}
+          <p className="stage-context">
+            Playing from album{' '}
+            <button type="button" onClick={onOpenAlbum}>
+              {ALBUM.title}
+            </button>
+          </p>
+          <h1>
+            <span className="stage-song">{track.title}</span>
+          </h1>
+          <p>
+            <ArtistLinks track={track} />
+          </p>
         </div>
         <div className="stage-actions">
           {algorithm.treeView && (

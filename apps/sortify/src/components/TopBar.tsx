@@ -23,6 +23,7 @@ const SHORTCUTS: [keys: string[], does: string][] = [
   [['Q', 'E'], 'Start or end of the song'],
   [['−', '='], 'Slower or faster'],
   [['M'], 'Sound on or off'],
+  [['Esc'], 'Leave the stage or lyrics'],
   [['Enter'], 'Play the array in the top bar'],
   [['Shift', 'Enter'], 'Expand the array field'],
 ]

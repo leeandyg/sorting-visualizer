@@ -11,13 +11,29 @@
   display: flex;
   align-items: flex-end;
   gap: 24px;
-  padding: 24px 24px 20px;
+  /* The top band is left to the ‹ › buttons, as on a music app's album page. */
+  padding: 60px 24px 20px;
 }
 
 .album-head .cover {
   --cover-radius: 6px;
+}
+
+/* The cover is a button: clicking it shows the art big, as a music app does. */
+.album-cover-button {
+  flex: none;
   width: clamp(120px, 17vh, 200px);
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
   box-shadow: 0 8px 40px rgb(0 0 0 / 0.5);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.album-cover-button:hover {
+  transform: scale(1.02);
 }
 
 .album-heading {
@@ -39,13 +55,115 @@
 }
 
 .album-meta {
-  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 6px;
   color: rgb(255 255 255 / 0.75);
 }
 
-.album-meta strong {
+/* A small round copy of the cover before the artist, where a music app shows the artist's photo. */
+.album-avatar {
+  width: 24px;
+  flex: none;
+}
+
+.album-head .album-avatar .cover {
+  --cover-radius: 50%;
+}
+
+.album-artist-button {
+  padding: 0;
+  border: none;
+  background: none;
   color: var(--text);
   font-weight: 700;
+  cursor: pointer;
+}
+
+.album-artist-button:hover,
+.album-artist-button[aria-expanded='true'] {
+  text-decoration: underline;
+}
+
+.artists-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 260px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.artists-menu li {
+  display: flex;
+  flex-direction: column;
+}
+
+.artists-menu a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.artists-menu a svg {
+  color: var(--muted);
+}
+
+.artists-menu a:hover {
+  text-decoration: underline;
+}
+
+.artists-menu span {
+  font-weight: 600;
+}
+
+.artists-menu small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Pins to the top of the pane with no height of its own, so it takes no room until it shows. */
+.album-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 0;
+}
+
+.album-sticky-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--sticky-bar);
+  /* Starts after the ‹ › buttons, which stay on top of it. */
+  padding: 0 20px 0 100px;
+  border-radius: 8px 8px 0 0;
+  background: hsl(var(--hue) 40% 18%);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 160ms ease,
+    visibility 160ms;
+}
+
+.album.is-stuck .album-sticky-bar {
+  opacity: 1;
+  visibility: visible;
+}
+
+.album-sticky-bar strong {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.big-play.is-small {
+  width: 40px;
+  height: 40px;
 }
 
 .album-actions {
@@ -100,6 +218,9 @@
 }
 
 .tracks th {
+  position: sticky;
+  top: var(--sticky-bar);
+  z-index: 2;
   padding: 0 12px 8px;
   border-bottom: 1px solid rgb(255 255 255 / 0.1);
   color: var(--muted);
@@ -110,6 +231,15 @@
 
 .tracks thead tr {
   height: 28px;
+}
+
+/* Pinned, the labels need a solid band so the songs don't show through as they scroll under. */
+.album.is-stuck .tracks th {
+  background: var(--raised);
+}
+
+.tracks-sentinel {
+  height: 1px;
 }
 
 /* A gap between the header rule and the first song. */
@@ -197,6 +327,7 @@
 
 .track-artist {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   font-size: 13px;

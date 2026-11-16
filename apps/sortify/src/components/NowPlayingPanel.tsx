@@ -1,9 +1,12 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
-import { algorithmInfo, type CodeLine, type Frame, ident, type Lang, LANGS, type Level, literal, type SortAlgorithm } from '@sortviz/core'
+import { type CSSProperties, useState } from 'react'
+import { algorithmInfo, type Frame, ident, type Lang, type Level, literal, type SortAlgorithm } from '@sortviz/core'
 import { ALBUM, artistsOf, type Track } from '../library/catalog'
 import { formatCount } from '../library/format'
 import { CoverArt } from './CoverArt'
 import { Icon } from './Icon'
+import { PanelArtist, WikiPill } from './PanelArtist'
+import { type Credit, creditsFor } from './PanelCredits'
+import { PanelLyrics } from './PanelLyrics'
 import { rolesById } from './roles'
 import './NowPlayingPanel.css'
 
@@ -22,20 +25,33 @@ interface Props {
   /** The song after this one, if any. */
   next: Track | null
   onPlayNext: () => void
+  /** Opens the full-screen lyrics view in the main area. */
+  onOpenLyrics?: () => void
+  /** Shows the song's cover art enlarged. */
+  onOpenCover?: () => void
+  /** The full lyrics fill the main area, so the preview card would only repeat them. */
+  lyricsOpen?: boolean
 }
 
 /** The right-hand panel: what's playing, its code as lyrics, and everything about the song. */
-export function NowPlayingPanel({ track, algorithm, frame, prev, maxValue, lang, onLang, level, onStage, onOpenStage, next, onPlayNext }: Props) {
-  const facts = algorithmInfo[track.id]
+export function NowPlayingPanel(props: Props) {
+  const { track, algorithm, frame, prev, maxValue, lang, onLang, level, onStage, onOpenStage, next, onPlayNext } = props
+  const { onOpenLyrics, onOpenCover, lyricsOpen } = props
   const artists = artistsOf(track)
-  const yesNo = (value: boolean) => (value ? 'Yes' : 'No')
+  const credits = creditsFor(track.id)
   return (
     <aside className="now-panel pane" style={{ '--hue': track.hue } as CSSProperties} aria-label="Now playing">
       <h2 className="panel-context">{ALBUM.title}</h2>
 
       {onStage ? (
         <div className="panel-song is-compact">
-          <CoverArt track={track} />
+          {onOpenCover ? (
+            <button type="button" className="panel-cover" onClick={onOpenCover} aria-label={`Show the cover of ${track.title}`}>
+              <CoverArt track={track} />
+            </button>
+          ) : (
+            <CoverArt track={track} />
+          )}
           <div className="panel-song-text">
             <strong>{track.title}</strong>
             <span>{artists}</span>
@@ -59,21 +75,12 @@ export function NowPlayingPanel({ track, algorithm, frame, prev, maxValue, lang,
         </>
       )}
 
-      <section className="lyrics card" aria-label="Lyrics: the code">
-        <header>
-          <h3>Lyrics</h3>
-          <div className="lang-tabs" role="tablist" aria-label="Code language">
-            {LANGS.map((option) => (
-              <button key={option.id} type="button" role="tab" aria-selected={option.id === lang} onClick={() => onLang(option.id)}>
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </header>
-        <Lyrics code={algorithm.code[lang]} active={frame.step?.line} />
-      </section>
+      {!lyricsOpen && (
+        <PanelLyrics code={algorithm.code[lang]} active={frame.step?.line} lang={lang} onLang={onLang} onOpen={onOpenLyrics} />
+      )}
 
-      <section className="panel-live" aria-label="Variables and counters">
+      <section className="card panel-live" aria-labelledby="live-title">
+        <h3 id="live-title">Variables</h3>
         <Variables frame={frame} prev={prev} lang={lang} />
         <dl className="counters">
           <div>
@@ -91,81 +98,21 @@ export function NowPlayingPanel({ track, algorithm, frame, prev, maxValue, lang,
         </dl>
       </section>
 
-      <section className="card about" aria-labelledby="about-title">
-        <h3 id="about-title">About the song</h3>
-        <p className="about-idea">{facts.idea}</p>
-        {algorithm.family && (
-          <p>
-            Lomuto and Hoare are two partition schemes: two ways to do quick sort's splitting step. This song uses{' '}
-            {algorithm.family.variant}'s.
-          </p>
-        )}
-        <dl className="about-stats">
-          <div>
-            <dt>Best</dt>
-            <dd>{facts.time.best}</dd>
-          </div>
-          <div>
-            <dt>Average</dt>
-            <dd>{facts.time.average}</dd>
-          </div>
-          <div>
-            <dt>Worst</dt>
-            <dd>{facts.time.worst}</dd>
-          </div>
-          <div>
-            <dt>Extra space</dt>
-            <dd>{facts.space}</dd>
-          </div>
-          <div>
-            <dt>Stable</dt>
-            <dd>{yesNo(algorithm.stable)}</dd>
-          </div>
-          <div>
-            <dt>In place</dt>
-            <dd>{yesNo(facts.inPlace)}</dd>
-          </div>
-          <div>
-            <dt>Adaptive</dt>
-            <dd>{yesNo(facts.adaptive)}</dd>
-          </div>
-        </dl>
-        <p>
-          <strong>Best and worst cases.</strong> {facts.cases}
-        </p>
-        <p>
-          <strong>Where it's used.</strong> {facts.usedFor}
-        </p>
-        {level === 'beginner' && (
-          <p className="about-glossary">
-            <strong>Reading the table.</strong> O(…) describes how the work grows as the array gets bigger: with O(n²),
-            doubling the array roughly quadruples the work; with O(n log n), it only a little more than doubles.{' '}
-            <em>Stable</em> means equal values keep their original order. <em>In place</em> means it needs no extra array.{' '}
-            <em>Adaptive</em> means it speeds up when the input is already partly sorted.
-          </p>
-        )}
-      </section>
+      {/* Keyed by song so the bio's "Show more" closes and re-measures on a new song. */}
+      <PanelArtist key={track.id} track={track} credits={credits.filter((credit) => !credit.extra)} />
 
-      <section className="card credits" aria-labelledby="credits-title">
-        <h3 id="credits-title">Credits</h3>
-        <dl>
-          <div>
-            <dt>{artists}</dt>
-            <dd>{facts.credits.by.length > 0 ? 'Written by' : 'No known author'}</dd>
-          </div>
-          {facts.credits.year !== undefined && (
-            <div>
-              <dt>{facts.credits.year}</dt>
-              <dd>Released</dd>
-            </div>
-          )}
-        </dl>
-        <p>{facts.credits.note}</p>
-      </section>
+      <AboutSong track={track} algorithm={algorithm} level={level} />
+
+      <CreditsCard key={`credits-${track.id}`} track={track} credits={credits} />
 
       {next && (
         <section className="card queue" aria-labelledby="queue-title">
-          <h3 id="queue-title">Next in queue</h3>
+          <header className="card-head">
+            <h3 id="queue-title">Next in queue</h3>
+            <button type="button" className="text-link" onClick={onPlayNext}>
+              Play now
+            </button>
+          </header>
           <button type="button" className="queue-row" onClick={onPlayNext} title={`Play ${next.title}`}>
             <CoverArt track={next} />
             <span className="panel-song-text">
@@ -176,6 +123,90 @@ export function NowPlayingPanel({ track, algorithm, frame, prev, maxValue, lang,
         </section>
       )}
     </aside>
+  )
+}
+
+/** The facts: idea, complexity, cases and uses, plus a key to the table for beginners. */
+function AboutSong({ track, algorithm, level }: { track: Track; algorithm: SortAlgorithm; level: Level }) {
+  const facts = algorithmInfo[track.id]
+  const yesNo = (value: boolean) => (value ? 'Yes' : 'No')
+  const stats: [string, string][] = [
+    ['Best', facts.time.best],
+    ['Average', facts.time.average],
+    ['Worst', facts.time.worst],
+    ['Extra space', facts.space],
+    ['Stable', yesNo(algorithm.stable)],
+    ['In place', yesNo(facts.inPlace)],
+    ['Adaptive', yesNo(facts.adaptive)],
+  ]
+  return (
+    <section className="card about" aria-labelledby="about-title">
+      <h3 id="about-title">About the song</h3>
+      <p className="about-idea">{facts.idea}</p>
+      {algorithm.family && (
+        <p>
+          Lomuto and Hoare are two partition schemes: two ways to do quick sort's splitting step. This song uses{' '}
+          {algorithm.family.variant}'s.
+        </p>
+      )}
+      <dl className="about-stats">
+        {stats.map(([term, value]) => (
+          <div key={term}>
+            <dt>{term}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p>
+        <strong>Best and worst cases.</strong> {facts.cases}
+      </p>
+      <p>
+        <strong>Where it's used.</strong> {facts.usedFor}
+      </p>
+      {level === 'beginner' && (
+        <p className="about-glossary">
+          <strong>Reading the table.</strong> O(…) describes how the work grows as the array gets bigger: with O(n²),
+          doubling the array roughly quadruples the work; with O(n log n), it only a little more than doubles.{' '}
+          <em>Stable</em> means equal values keep their original order. <em>In place</em> means it needs no extra array.{' '}
+          <em>Adaptive</em> means it speeds up when the input is already partly sorted.
+        </p>
+      )}
+      <div className="about-more">
+        <WikiPill href={facts.wikipedia} label="Read on Wikipedia" />
+      </div>
+    </section>
+  )
+}
+
+/** Credits rows like a music app's, names without links; "Show all" adds anyone else the history names, the year and the full note. */
+function CreditsCard({ track, credits }: { track: Track; credits: Credit[] }) {
+  const [all, setAll] = useState(false)
+  const { year, note } = algorithmInfo[track.id].credits
+  const shown = all ? credits : credits.filter((credit) => !credit.extra)
+  return (
+    <section className="card credits" aria-labelledby="credits-title">
+      <header className="card-head">
+        <h3 id="credits-title">Credits</h3>
+        <button type="button" className="text-link" onClick={() => setAll(!all)} aria-expanded={all}>
+          {all ? 'Show less' : 'Show all'}
+        </button>
+      </header>
+      <ul className="credit-rows">
+        {/* Plain names: the artist card and About the song already link out, once each. */}
+        {shown.map((credit) => (
+          <li key={credit.name}>
+            <span className="credit-name">{credit.name}</span>
+            <span className="credit-role">{credit.role}</span>
+          </li>
+        ))}
+      </ul>
+      {all && (
+        <div className="credits-more">
+          {year !== undefined && <p>Released {year}.</p>}
+          <p>{note}</p>
+        </div>
+      )}
+    </section>
   )
 }
 
@@ -196,35 +227,6 @@ function MiniBars({ frame, maxValue }: { frame: Frame; maxValue: number }) {
   )
 }
 
-/** The listing as lyrics: the line being run is lit, the rest is dimmed, and it scrolls to follow along. */
-function Lyrics({ code, active }: { code: CodeLine[]; active: string | undefined }) {
-  const box = useRef<HTMLPreElement>(null)
-
-  // Long listings scroll inside the card; keep the lit lines in view as the step changes.
-  useEffect(() => {
-    const el = box.current
-    const lines = el?.querySelectorAll<HTMLElement>('.lyric.is-active')
-    if (!el || !lines?.length) return
-    const top = lines[0].offsetTop
-    const bottom = lines[lines.length - 1].offsetTop + lines[lines.length - 1].offsetHeight
-    if (top < el.scrollTop || bottom > el.scrollTop + el.clientHeight) {
-      el.scrollTop = Math.max(0, (top + bottom) / 2 - el.clientHeight / 2)
-    }
-  }, [active, code])
-
-  return (
-    <pre className="lyrics-code" ref={box}>
-      <code>
-        {code.map((line, k) => (
-          <div key={k} className={active && line.keys.includes(active) ? 'lyric is-active' : 'lyric'}>
-            {highlight(line.text)}
-          </div>
-        ))}
-      </code>
-    </pre>
-  )
-}
-
 function Variables({ frame, prev, lang }: { frame: Frame; prev: Frame | null; lang: Lang }) {
   const names = Object.keys(frame.vars)
   const before = prev?.vars ?? {}
@@ -240,28 +242,4 @@ function Variables({ frame, prev, lang }: { frame: Frame; prev: Frame | null; la
       ))}
     </dl>
   )
-}
-
-// Keywords across the four languages (none of them are identifiers in the listings), then
-// library names, then numbers.
-const TOKEN =
-  /\b(def|for|in|if|not|and|or|while|break|return|True|False|true|false|function|const|let|do|else|void|int|bool|boolean|using|static)\b|\b(len|range|Math|Arrays|std|Vec|swap|slice|copyOfRange|floor|size|length|begin|vector)\b|\b(\d+)\b/g
-
-/** Minimal highlighting: keywords, library names and numbers. */
-function highlight(text: string): ReactNode[] {
-  const parts: ReactNode[] = []
-  let last = 0
-  for (const match of text.matchAll(TOKEN)) {
-    const at = match.index
-    if (at > last) parts.push(text.slice(last, at))
-    const kind = match[1] ? 'tok-keyword' : match[2] ? 'tok-builtin' : 'tok-number'
-    parts.push(
-      <span key={at} className={kind}>
-        {match[0]}
-      </span>,
-    )
-    last = at + match[0].length
-  }
-  if (last < text.length) parts.push(text.slice(last))
-  return parts
 }

@@ -51,31 +51,44 @@
   white-space: nowrap;
 }
 
+/* Music players draw the bar's icons smaller than elsewhere in the app; the buttons stay 32px so
+   they're still easy to hit. */
+.playback-bar .icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.playback-bar .icon-button {
+  transition: color 100ms;
+}
+
 .bar-center {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .transport {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .play-button {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  margin: 0 6px;
+  width: 32px;
+  height: 32px;
+  margin: 0 8px;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: var(--text);
   color: var(--shell);
   cursor: pointer;
+  transition: transform 100ms;
 }
 
 .play-button:hover {
@@ -84,6 +97,75 @@
 
 .play-button:active {
   transform: scale(0.96);
+}
+
+/* Taken out of the flex row so its label (0.5× to 100×) can't push the transport off centre. */
+.bar-speed {
+  position: absolute;
+  right: calc(100% + 4px);
+}
+
+/* Fixed width so the label never shifts what's beside it; "100×" is the widest. */
+.speed-button {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 100ms;
+}
+
+/* The × smaller and sitting on the baseline, as podcast players write "1×". */
+.speed-button small {
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.speed-button:hover,
+.speed-button[aria-expanded='true'] {
+  color: var(--text);
+}
+
+.speed-button:active {
+  transform: scale(0.94);
+}
+
+.bar-speed .popover {
+  min-width: 184px;
+  padding: 4px;
+}
+
+.bar-speed .popover h3 {
+  margin: 0;
+  padding: 10px 12px 6px;
+  font-size: 12px;
+}
+
+.speed-list {
+  margin: 0;
+}
+
+.speed-list button {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-note {
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .scrub {
@@ -95,9 +177,9 @@
 }
 
 .time {
-  min-width: 36px;
+  min-width: 40px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -109,66 +191,12 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
-}
-
-.speed-button {
-  min-width: 44px;
-  height: 28px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 14px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-
-.speed-button:hover {
-  color: var(--text);
-}
-
-.speed-slider {
-  width: 264px;
-  margin-bottom: 10px;
-}
-
-.speed-choices {
-  display: flex;
   gap: 4px;
 }
 
-.speed-choices button {
-  flex: 1;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 14px;
-  background: rgb(255 255 255 / 0.08);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.speed-choices button:hover {
-  background: rgb(255 255 255 / 0.16);
-}
-
-.speed-choices button[aria-pressed='true'] {
-  background: var(--text);
-  color: var(--shell);
-}
-
-.speed-note {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .volume {
-  width: 96px;
+  width: 92px;
+  margin-right: 4px;
 }
 
 .like.is-on {

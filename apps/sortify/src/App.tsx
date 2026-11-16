@@ -1,19 +1,23 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { algorithms, generate, type Lang, LANGS, parseArray, playTones, record, setVolume, type Shape, SHAPES } from '@sortviz/core'
+import { algorithmInfo, algorithms, generate, type Lang, LANGS, parseArray, playTones, record, setVolume, type Shape, SHAPES } from '@sortviz/core'
 import { AlbumView, type TrackStats } from './components/AlbumView'
-import { CoverArt } from './components/CoverArt'
+import { AlbumArt, CoverArt } from './components/CoverArt'
+import { CoverLightbox } from './components/CoverLightbox'
+import { LyricsView } from './components/LyricsView'
 import { NowPlayingPanel } from './components/NowPlayingPanel'
 import { PlaybackBar } from './components/PlaybackBar'
 import { Sidebar } from './components/Sidebar'
 import { type Captions, StageView } from './components/StageView'
 import { TopBar } from './components/TopBar'
-import { ALBUM, artistsOf, upNextIndex } from './library/catalog'
+import { ALBUM, albumYears, artistsOf, upNextIndex } from './library/catalog'
 import { useKeyboardShortcuts } from './playback/useKeyboardShortcuts'
 import { usePlayer } from './playback/usePlayer'
 import { useStepSound } from './playback/useStepSound'
 import { readUrlState, urlFor } from './settings/urlState'
 import { useLikedArrays, useStoredNumber } from './settings/useStored'
 import { useStoredChoice } from './settings/useStoredChoice'
+import { canGo, current, startHistory, step, visit } from './navigation/history'
+import { ViewNav } from './components/ViewNav'
 import './App.css'
 
 /** Sixteen values: enough for a song to look and sound like something. */
@@ -25,6 +29,8 @@ const linkedTrack = ALBUM.tracks.findIndex((track) => track.id === fromUrl.algor
 const UP_NEXT_MS = 4000
 const REPEAT_MS = 1500
 
+type View = 'album' | 'stage' | 'lyrics'
+
 function App() {
   const [trackIndex, setTrackIndex] = useState(Math.max(linkedTrack, 0))
   const [input, setInput] = useState(fromUrl.input ?? DEFAULT_INPUT)
@@ -32,8 +38,15 @@ function App() {
   const [size, setSize] = useState(Math.max(input.length, 2))
   const [shape, setShape] = useState<Shape>('random')
   const [error, setError] = useState<string | null>(null)
-  // A link to a song opens on the stage; otherwise you land on the album.
-  const [view, setView] = useState<'album' | 'stage'>(linkedTrack >= 0 ? 'stage' : 'album')
+  // You always land on the album, even from a link to a song (the song is loaded, ready to play).
+  // Views are kept as a trail so the ‹ › buttons can walk it, like pages in a music app.
+  const [views, setViews] = useState(() => startHistory<View>('album'))
+  const view = current(views)
+  const setView = (next: View) => setViews((h) => visit(h, next))
+  // The view the lyrics cover, so closing them goes back to where you were.
+  const [behindLyrics, setBehindLyrics] = useState<Exclude<View, 'lyrics'>>('album')
+  // The cover shown enlarged: the album's, a song's (by track index), or none.
+  const [bigCover, setBigCover] = useState<'album' | number | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [captions, setCaptions] = useStoredChoice<Captions>('sortify-captions', ['beginner', 'expert', 'off'], 'beginner')
   const [sound, setSound] = useStoredChoice<'on' | 'off'>('sortify-sound', ['on', 'off'], 'on')
@@ -92,7 +105,8 @@ function App() {
 
   /** Starts a song from the top. Picking the one that's already loaded just makes sure it's playing. */
   const playTrack = (index: number, openStage: boolean) => {
-    if (openStage) setView('stage')
+    // With the lyrics open, a new song keeps them open (they follow the song), as in a music app.
+    if (openStage && view !== 'lyrics') setView('stage')
     if (index === trackIndex) {
       if (!player.playing) player.play()
       return
@@ -106,6 +120,13 @@ function App() {
     if (player.index > 3 || trackIndex === 0) player.reset(true)
     else playTrack(trackIndex - 1, false)
   }
+
+  const openLyrics = () => {
+    if (view === 'lyrics') return
+    setBehindLyrics(view)
+    setView('lyrics')
+  }
+  const toggleLyrics = () => (view === 'lyrics' ? setView(behindLyrics) : openLyrics())
 
   const nextTrack = () => playTrack((trackIndex + 1) % ALBUM.tracks.length, false)
 
@@ -149,7 +170,12 @@ function App() {
     setSound(level > 0 ? 'on' : 'off')
   }
 
-  useKeyboardShortcuts(player, trace.frames.length, run, toggleSound)
+  // Esc steps back out, like closing a full-screen view: lyrics → what was behind them, stage → album.
+  const escape = () => {
+    if (view === 'lyrics') setView(behindLyrics)
+    else if (view === 'stage') setView('album')
+  }
+  useKeyboardShortcuts(player, trace.frames.length, run, toggleSound, escape)
   useStepSound(sound === 'on', trace, player.index, maxValue)
 
   // When a song plays through to its end, the next one (or the same one, on repeat) starts after a pause.
@@ -206,6 +232,20 @@ function App() {
           onTogglePlay={() => (player.playing ? player.pause() : playTrack(trackIndex, true))}
           onPlayTrack={(index) => playTrack(index, true)}
           onShuffle={shuffle}
+          onOpenCover={() => setBigCover('album')}
+        />
+      ) : view === 'lyrics' ? (
+        <LyricsView
+          track={track}
+          code={algorithm.code[lang]}
+          active={frame.step?.line}
+          finished={player.index === trace.frames.length - 1}
+          lang={lang}
+          onLang={setLang}
+          onClose={() => setView(behindLyrics)}
+          frames={trace.frames}
+          index={player.index}
+          onSeek={player.seek}
         />
       ) : (
         <StageView
@@ -218,10 +258,17 @@ function App() {
           lang={lang}
           captions={captions}
           onCaptions={setCaptions}
-          onBack={() => setView('album')}
+          onOpenAlbum={() => setView('album')}
           onShare={share}
         />
       )}
+
+      <ViewNav
+        canBack={canGo(views, -1)}
+        canForward={canGo(views, 1)}
+        onBack={() => setViews((h) => step(h, -1))}
+        onForward={() => setViews((h) => step(h, 1))}
+      />
 
       <div className="overlays">
         {toast && (
@@ -260,6 +307,9 @@ function App() {
         onOpenStage={() => setView('stage')}
         next={following}
         onPlayNext={nextTrack}
+        onOpenLyrics={openLyrics}
+        onOpenCover={() => setBigCover(trackIndex)}
+        lyricsOpen={view === 'lyrics'}
       />
 
       <PlaybackBar
@@ -280,9 +330,26 @@ function App() {
         onVolume={changeVolume}
         onStage={view === 'stage'}
         onToggleStage={() => setView(view === 'stage' ? 'album' : 'stage')}
+        lyricsOpen={view === 'lyrics'}
+        onToggleLyrics={toggleLyrics}
       />
+
+      {bigCover !== null && (
+        <CoverLightbox
+          art={bigCover === 'album' ? <AlbumArt /> : <CoverArt track={ALBUM.tracks[bigCover]} />}
+          title={bigCover === 'album' ? ALBUM.title : ALBUM.tracks[bigCover].title}
+          subtitle={bigCover === 'album' ? `${ALBUM.artist} • ${albumYears()}` : coverLine(ALBUM.tracks[bigCover])}
+          onClose={() => setBigCover(null)}
+        />
+      )}
     </div>
   )
+}
+
+/** "Tony Hoare • 1961": who and when, under a song's enlarged cover. */
+function coverLine(track: (typeof ALBUM.tracks)[number]): string {
+  const { year } = algorithmInfo[track.id].credits
+  return year === undefined ? artistsOf(track) : `${artistsOf(track)} • ${year}`
 }
 
 export default App

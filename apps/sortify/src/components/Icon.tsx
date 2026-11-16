@@ -77,6 +77,24 @@ const ICONS = {
     />
   ),
   bars: <path d="M6 20v-6M12 20V9M18 20V4" {...stroke} strokeWidth={3} />,
+  mic: <path d="M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" {...stroke} />,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" {...stroke} />,
+  close: <path d="M6 6l12 12M18 6L6 18" {...stroke} />,
+  chevronRight: <path d="M9 5l7 7-7 7" {...stroke} />,
+  chevronLeft: <path d="M15 5l-7 7 7 7" {...stroke} />,
+  /** A filled triangle that points right when closed; rotate it 90° for open, like a music app's folder toggle. */
+  caret: <path d="M9 6.5v11l8-5.5z" {...solid} />,
+  /** A handheld mic held at an angle: the round head up and right, the handle down to the left. */
+  lyrics: (
+    <>
+      <circle cx="15.5" cy="8.5" r="4.5" {...stroke} />
+      {/* A wide collar under the head and a handle tapering to the tip: a magnifier's is a thin bar. */}
+      <path d="M10.3 10.3L13.7 13.7M10.3 10.3L4.8 17.4a1.3 1.3 0 0 0 1.8 1.8L13.7 13.7" {...stroke} />
+    </>
+  ),
+  /** Four corners pointing out (open the stage) and in (leave it). */
+  fullscreen: <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" {...stroke} />,
+  exitFullscreen: <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" {...stroke} />,
 } satisfies Record<string, ReactNode>
 
 export type IconName = keyof typeof ICONS
