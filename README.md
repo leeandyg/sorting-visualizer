@@ -4,8 +4,8 @@ Two sites about how sorting algorithms work, built on one shared engine.
 
 | | |
 |---|---|
-| **[Sorting Visualizer](apps/visualizer)** | Step-by-step animations with narration and highlighted code. Live at [sorting.andygl.com](https://sorting.andygl.com) |
-| **[Sortify](apps/sortify)** | A music player for the same algorithms: an album of sorts, with the code as lyrics. Live at [sortify.andygl.com](https://sortify.andygl.com) |
+| **[Sorting Visualizer](apps/visualizer)** | **For learning.** Step-by-step animations with narration and highlighted code. Live at [sorting.andygl.com](https://sorting.andygl.com) |
+| **[Sortify](apps/sortify)** | **For engaging your senses.** A music player for sorting algorithms. Live at [sortify.andygl.com](https://sortify.andygl.com) |
 | **[`@sortviz/core`](packages/core)** | The shared engine: algorithms, step recording, narration, code listings and sound. No UI |
 
 ## Running it
