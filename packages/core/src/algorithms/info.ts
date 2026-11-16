@@ -14,6 +14,22 @@ export interface AlgorithmInfo {
   usedFor: string
   /** Who it's credited to. `by` is empty when nobody is (the simple sorts are older than their names). */
   credits: { by: string[]; year?: number; note: string }
+  /** The algorithm's Wikipedia article (a section of it, for the quicksort partition schemes). */
+  wikipedia: string
+}
+
+const WIKI = 'https://en.wikipedia.org/wiki/'
+
+/**
+ * Wikipedia articles for the people named in the credits. Not everyone has one (Nico Lomuto
+ * doesn't), so look names up here and show plain text when there's no entry.
+ */
+export const people: Record<string, string> = {
+  'John von Neumann': `${WIKI}John_von_Neumann`,
+  'Tony Hoare': `${WIKI}Tony_Hoare`,
+  'J. W. J. Williams': `${WIKI}J._W._J._Williams`,
+  'Robert Floyd': `${WIKI}Robert_W._Floyd`,
+  'Kenneth Iverson': `${WIKI}Kenneth_E._Iverson`,
 }
 
 export const info: Record<AlgorithmId, AlgorithmInfo> = {
@@ -29,6 +45,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       by: [],
       note: 'Nobody is credited with inventing it. It was analyzed as early as 1956, and the name "bubble sort" first appeared in print in 1962, in a book by Kenneth Iverson.',
     },
+    wikipedia: `${WIKI}Bubble_sort`,
   },
   selection: {
     idea: 'Find the smallest value in the unsorted part and swap it to the front of that part. Repeat.',
@@ -42,6 +59,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       by: [],
       note: 'Nobody is credited with inventing it. It is one of the oldest and most obvious ways to sort: keep picking the smallest thing left.',
     },
+    wikipedia: `${WIKI}Selection_sort`,
   },
   insertion: {
     idea: 'Grow a sorted section at the front, one element at a time: take the next value, slide bigger values right, and drop it into the gap.',
@@ -55,6 +73,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       by: [],
       note: 'Nobody is credited with inventing it. It is how most people sort a hand of playing cards.',
     },
+    wikipedia: `${WIKI}Insertion_sort`,
   },
   merge: {
     idea: 'Split the array in half, sort each half the same way, then merge the two sorted halves by repeatedly taking the smaller front value.',
@@ -69,6 +88,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       year: 1945,
       note: 'Invented by John von Neumann in 1945, which makes it one of the first sorting algorithms designed for a computer.',
     },
+    wikipedia: `${WIKI}Merge_sort`,
   },
   'quick-lomuto': {
     idea: 'Pick a pivot, move smaller values to its left and bigger ones to its right, then sort each side the same way. Lomuto uses the last element as the pivot.',
@@ -82,6 +102,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       by: ['Tony Hoare', 'Nico Lomuto'],
       note: "Quicksort is Tony Hoare's (developed in 1959, published in 1961). This simpler way to partition is attributed to Nico Lomuto and was popularized by Jon Bentley's book Programming Pearls and the textbook Introduction to Algorithms.",
     },
+    wikipedia: `${WIKI}Quicksort#Lomuto_partition_scheme`,
   },
   'quick-hoare': {
     idea: "Pick a pivot, then scan from both ends toward the middle, swapping pairs that are on the wrong side. Sort each part the same way. Hoare's scheme uses the middle element's value as the pivot.",
@@ -96,6 +117,7 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       year: 1961,
       note: 'Developed by Tony Hoare in 1959 and published in 1961. This two-pointer partition is his original scheme.',
     },
+    wikipedia: `${WIKI}Quicksort#Hoare_partition_scheme`,
   },
   heap: {
     idea: 'Arrange the array into a max-heap (a tree where every parent is at least as big as its children), then repeatedly move the root, the biggest value, to the end.',
@@ -110,5 +132,6 @@ export const info: Record<AlgorithmId, AlgorithmInfo> = {
       year: 1964,
       note: 'Published by J. W. J. Williams in 1964, in the paper that also introduced the binary heap. Robert Floyd improved it the same year so it could sort in place.',
     },
+    wikipedia: `${WIKI}Heapsort`,
   },
 }

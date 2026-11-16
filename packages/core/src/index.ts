@@ -6,6 +6,7 @@
 
 // Recording steps
 export { record, MAX_SIZE } from './engine/record'
+export { stepForLine } from './engine/seek'
 export type {
   AlgorithmId,
   AuxBuffer,
@@ -26,7 +27,7 @@ export type {
 
 // Algorithms and facts about them
 export { algorithms, algorithmList, algorithmFamilies } from './algorithms'
-export { info as algorithmInfo, type AlgorithmInfo } from './algorithms/info'
+export { info as algorithmInfo, type AlgorithmInfo, people as peopleLinks } from './algorithms/info'
 
 // Code listings' languages
 export { LANGS, ident, literal, type Lang } from './engine/lang'
