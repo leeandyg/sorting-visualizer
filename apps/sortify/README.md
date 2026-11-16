@@ -1,13 +1,15 @@
 # Sortify
 
-Not only can you see the sorting...but now you can listen to it.
+Experience sorting like never before. Not with one, but **two** senses.
 
-Built for long walks in the park, car karaoke with the windows down, and making the dishes less monotonous.
+Built for mathematicians struggling to write their theses.
+
+Best for long walks in the park, midnight strokes of inspiration, and discovering the essence of the universe with a piece of chalk.
 
 Live at https://sortify.andygl.com.
 
-Actually learn the sorting algorithms at [Sorting Visualizer](../visualizer), built on the same
-engine. 
+(Actually learn the sorting algorithms at [Sorting Visualizer](../visualizer), built on the same
+engine)
 
 
 ## Keyboard
@@ -31,5 +33,6 @@ npm install
 npm run dev:sortify    # http://localhost:5174
 ```
 
-Not affiliated with Spotify.
+***
 
+Not affiliated with Spotify.
