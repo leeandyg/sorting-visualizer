@@ -1,5 +1,7 @@
 # Sorting Visualizer
 
+Two apps.
+
 | | |
 |---|---|
 | <img width="15" height="15" alt="favicon" src="./apps/visualizer/public/favicon.svg" /> **[Sorting Visualizer](apps/visualizer)** | **For learning.** Step-by-step animations with narration and highlighted code. Live at [sorting.andygl.com](https://sorting.andygl.com) |
