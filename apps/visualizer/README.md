@@ -6,6 +6,9 @@ while staying accurate enough for experts.
 
 Live at https://sorting.andygl.com.
 
+<img width="1217" height="823" alt="Screenshot 2026-11-16 at 1 05 49 AM" src="https://github.com/user-attachments/assets/abd7e552-b3e5-4046-af6f-732c553aff08" />
+
+
 Algorithms: bubble, selection, insertion, merge, quick (Lomuto and Hoare partitions), heap.
 
 ## How it works
