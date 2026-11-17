@@ -11,7 +11,8 @@ Best for long walks in the park, midnight strokes of inspiration, and discoverin
 
 Live at https://sortify.andygl.com.
 
-<img width="1504" height="823" alt="Screenshot 2026-11-16 at 12 39 54 AM" src="https://github.com/user-attachments/assets/4b15cd34-b05d-4317-9410-1133fa3f52cd" />
+<img width="1504" height="823" alt="Screenshot 2026-11-16 at 4 07 29 PM" src="https://github.com/user-attachments/assets/d93bb8be-ad66-4f32-92dc-fca4f7fb619f" />
+
 
 
 (Actually learn the sorting algorithms at [Sorting Visualizer](../visualizer), built on the same
