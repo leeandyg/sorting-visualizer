@@ -43,11 +43,11 @@ function App() {
   const [shape, setShape] = useState<Shape>('random')
   const [error, setError] = useState<string | null>(null)
   // You always land on the album, even from a link to a song (the song is loaded, ready to play).
-  // The one exception: switching over from the Sorting Visualizer opens the stage, so the sort
-  // you were watching is still in front of you.
+  // The one exception: switching over from the Sorting Visualizer while a sort is playing opens
+  // the stage, so the sort you were watching carries on in front of you.
   // Views are kept as a trail so the ‹ › buttons can walk it, like pages in a music app.
   const [views, setViews] = useState(() =>
-    handoff.arrived ? visit(startHistory<View>('album'), 'stage') : startHistory<View>('album'),
+    handoff.playing ? visit(startHistory<View>('album'), 'stage') : startHistory<View>('album'),
   )
   const view = current(views)
   const setView = (next: View) => setViews((h) => visit(h, next))
