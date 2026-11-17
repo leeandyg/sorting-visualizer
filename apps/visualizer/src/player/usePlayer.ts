@@ -15,11 +15,12 @@ export function nextSpeed(speed: number, direction: 1 | -1): number {
  * Steps through `frameCount` frames like a video player. Speed is in steps per second;
  * at high speeds several frames are advanced per animation frame.
  */
-export function usePlayer(frameCount: number, initialIndex = 0) {
+export function usePlayer(frameCount: number, initialIndex = 0, initialSpeed = 2, autoplay = false) {
   const last = Math.max(frameCount - 1, 0)
   const [index, setIndex] = useState(() => Math.min(initialIndex, last))
-  const [playing, setPlaying] = useState(false)
-  const [speed, setSpeed] = useState(2)
+  // Arriving from the other site mid-run carries on playing (unless it had already finished).
+  const [playing, setPlaying] = useState(autoplay && initialIndex < last)
+  const [speed, setSpeed] = useState(initialSpeed)
 
   // The animation loop needs the current index without restarting on every step.
   const indexRef = useRef(Math.min(initialIndex, last))

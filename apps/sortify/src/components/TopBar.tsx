@@ -1,8 +1,9 @@
 import type { FormEvent } from 'react'
-import { ArrayOptions, type ShuffleSettings } from './ArrayOptions'
+import { ArrayOptions, type ArraySettings } from './ArrayOptions'
 import { ArrayPrompt } from './ArrayPrompt'
 import { Icon } from './Icon'
 import { Popover } from './Popover'
+import { SiteSwitcher } from './SiteSwitcher'
 import './TopBar.css'
 
 interface Props {
@@ -13,7 +14,11 @@ interface Props {
   onSubmit: (e?: FormEvent) => void
   onHome: () => void
   atHome: boolean
-  settings: ShuffleSettings
+  settings: ArraySettings
+  /** What a new array would be, for the die's tooltip (e.g. "random, 16 values"). */
+  newArrayMakes: string
+  /** Link to the other site, carrying the current state. */
+  switchHref: string
 }
 
 const SHORTCUTS: [keys: string[], does: string][] = [
@@ -28,26 +33,10 @@ const SHORTCUTS: [keys: string[], does: string][] = [
   [['Shift', 'Enter'], 'Expand the array field'],
 ]
 
-/** Sortify's mark: three sorted bars in a disc. */
-export function Logo({ size = 36 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 32 32" width={size} height={size} role="img" aria-label="Sortify">
-      <circle cx="16" cy="16" r="16" fill="var(--accent)" />
-      <g fill="var(--shell)">
-        <rect x="8" y="16.5" width="4" height="7.5" rx="2" />
-        <rect x="14" y="12" width="4" height="12" rx="2" />
-        <rect x="20" y="7.5" width="4" height="16.5" rx="2" />
-      </g>
-    </svg>
-  )
-}
-
-export function TopBar({ text, onText, error, onSubmit, onHome, atHome, settings }: Props) {
+export function TopBar({ text, onText, error, onSubmit, onHome, atHome, settings, newArrayMakes, switchHref }: Props) {
   return (
     <header className="top-bar">
-      <button type="button" className="logo-button" onClick={onHome} aria-label="Sortify home">
-        <Logo />
-      </button>
+      <SiteSwitcher href={switchHref} />
 
       <div className="top-center">
         <button
@@ -61,7 +50,16 @@ export function TopBar({ text, onText, error, onSubmit, onHome, atHome, settings
         </button>
         <form className="prompt-form" onSubmit={onSubmit}>
           <ArrayPrompt text={text} onChange={onText} error={error}>
-            <Popover button={<Icon name="sliders" />} label="Shuffle settings" buttonClass="icon-button">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={settings.onNewArray}
+              aria-label={`New array (${newArrayMakes})`}
+              title={`New array (${newArrayMakes})`}
+            >
+              <Icon name="dice" />
+            </button>
+            <Popover button={<Icon name="sliders" />} label="New array settings" buttonClass="icon-button">
               {(close) => <ArrayOptions settings={settings} close={close} />}
             </Popover>
           </ArrayPrompt>

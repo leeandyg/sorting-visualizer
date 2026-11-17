@@ -15,11 +15,12 @@ export function nextSpeed(speed: number, direction: 1 | -1): number {
  * Steps through `frameCount` frames like a music player. Speed is in steps per second;
  * at high speeds several frames are advanced per animation frame.
  */
-export function usePlayer(frameCount: number, initialIndex = 0) {
+export function usePlayer(frameCount: number, initialIndex = 0, initialSpeed = 4, autoplay = false) {
   const last = Math.max(frameCount - 1, 0)
   const [index, setIndex] = useState(() => Math.min(initialIndex, last))
-  const [playing, setPlaying] = useState(false)
-  const [speed, setSpeed] = useState(4)
+  // Arriving from the other site mid-song carries on playing (unless it had already finished).
+  const [playing, setPlaying] = useState(autoplay && initialIndex < last)
+  const [speed, setSpeed] = useState(initialSpeed)
   // True only when playback ran to the last frame on its own and nothing has been touched since.
   // That is the one moment the next track may start by itself.
   const [ended, setEnded] = useState(false)

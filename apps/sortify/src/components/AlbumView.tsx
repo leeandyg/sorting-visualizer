@@ -27,13 +27,19 @@ interface Props {
   arraySize: number
   onTogglePlay: () => void
   onPlayTrack: (index: number) => void
-  onShuffle: () => void
+  /** Songs play in a random order; this button mirrors the one in the playback bar. */
+  shuffle: boolean
+  onToggleShuffle: () => void
+  /** Rolls a fresh array from the current settings and plays it. */
+  onNewArray: () => void
+  /** What a new array would be, for the tooltip (e.g. "random, 16 values"). */
+  newArrayMakes: string
   /** Shows the album cover enlarged. */
   onOpenCover: () => void
 }
 
 /** The album page: cover, title, the big play button, and the songs with how each does on the current array. */
-export function AlbumView({ stats, current, playing, arraySize, onTogglePlay, onPlayTrack, onShuffle, onOpenCover }: Props) {
+export function AlbumView({ stats, current, playing, arraySize, onTogglePlay, onPlayTrack, shuffle, onToggleShuffle, onNewArray, newArrayMakes, onOpenCover }: Props) {
   const total = stats.reduce((sum, s) => sum + s.steps, 0)
   // Once the track list's header reaches the top, a slim bar with the title and play button takes over
   // and the column labels stay pinned under it, as on a music app's album page.
@@ -92,15 +98,25 @@ export function AlbumView({ stats, current, playing, arraySize, onTogglePlay, on
         </button>
         <button
           type="button"
-          className="icon-button album-shuffle"
-          onClick={onShuffle}
-          aria-label="Shuffle: play a new array"
-          title="Shuffle: play a new array"
+          className={shuffle ? 'icon-button album-shuffle has-dot is-on' : 'icon-button album-shuffle has-dot'}
+          onClick={onToggleShuffle}
+          aria-pressed={shuffle}
+          aria-label="Shuffle the songs"
+          title={shuffle ? 'Shuffle is on: songs play in a random order' : 'Shuffle the songs'}
         >
           <Icon name="shuffle" size={30} />
         </button>
+        <button
+          type="button"
+          className="icon-button album-shuffle"
+          onClick={onNewArray}
+          aria-label={`New array (${newArrayMakes})`}
+          title={`New array (${newArrayMakes})`}
+        >
+          <Icon name="dice" size={28} />
+        </button>
         <p className="album-note">
-          Every song is playing the same {arraySize} values. Shuffle them, or type your own in the bar at the top.
+          Every song is playing the same {arraySize} values. Roll new ones with the die, or type your own in the bar at the top.
         </p>
       </div>
 
@@ -162,12 +178,7 @@ export function AlbumView({ stats, current, playing, arraySize, onTogglePlay, on
       <footer className="album-foot">
         <p>One step of a sort is one second of a song.</p>
         <p>℗ {albumYears()} {ALBUM.artist}</p>
-        <p>
-          Not affiliated with Spotify. Want the step-by-step version?{' '}
-          <a href="https://sorting.andygl.com" target="_blank" rel="noreferrer">
-            Sorting Visualizer
-          </a>
-        </p>
+        <p>Not affiliated with Spotify.</p>
       </footer>
     </section>
   )

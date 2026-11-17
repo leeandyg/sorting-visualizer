@@ -1,0 +1,82 @@
+.site-switcher {
+  position: relative;
+}
+
+.site-switcher h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.site-switcher h1 button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Pulled left by its padding so the logo lines up with the page's left edge. */
+  margin: -6px 0 -6px -8px;
+  padding: 6px 10px 6px 8px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.site-switcher h1 button:hover,
+.site-switcher h1 button[aria-expanded='true'] {
+  background: var(--surface);
+}
+
+.site-caret {
+  color: var(--muted);
+}
+
+.site-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: -8px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 300px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.16);
+}
+
+.site-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-option > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-option strong {
+  font-weight: 600;
+}
+
+.site-option small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+a.site-option:hover {
+  background: var(--surface);
+}
+
+.site-option.is-current > svg:last-child {
+  color: var(--accent);
+}

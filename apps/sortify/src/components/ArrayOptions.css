@@ -1,5 +1,18 @@
 .array-options {
+  position: relative;
   width: 296px;
+}
+
+/* Tucked in the corner, level with the heading. */
+.array-reset {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+
+.array-reset:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .shape-chips {

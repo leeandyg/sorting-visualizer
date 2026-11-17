@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { algorithmList, algorithms } from '@sortviz/core'
-import { ALBUM, albumYears, artistsOf, complexityBadge, TRADITIONAL, upNextIndex } from './catalog'
+import { ALBUM, albumYears, artistsOf, complexityBadge, IN_ORDER, neighbour, shuffledOrder, TRADITIONAL, upNextIndex } from './catalog'
 import { weave } from './weave'
 import { formatLength, formatSpeed, formatTime } from './format'
 
@@ -37,12 +37,28 @@ describe('the album', () => {
 
 describe('what plays next', () => {
   it('moves down the album and stops after the last track', () => {
-    expect(upNextIndex(0, false, 7)).toBe(1)
-    expect(upNextIndex(6, false, 7)).toBeNull()
+    expect(upNextIndex(0, false)).toBe(1)
+    expect(upNextIndex(IN_ORDER.length - 1, false)).toBeNull()
   })
 
   it('stays on the same track with repeat on', () => {
-    expect(upNextIndex(6, true, 7)).toBe(6)
+    expect(upNextIndex(6, true)).toBe(6)
+  })
+
+  it('shuffles every track in once, starting with the loaded one', () => {
+    for (let run = 0; run < 20; run++) {
+      const order = shuffledOrder(3)
+      expect(order[0]).toBe(3)
+      expect([...order].sort()).toEqual(IN_ORDER)
+    }
+  })
+
+  it('follows the shuffled order forward and back, and stops at its ends', () => {
+    const order = [3, 0, 6, 1]
+    expect(upNextIndex(3, false, order)).toBe(0)
+    expect(upNextIndex(1, false, order)).toBeNull()
+    expect(neighbour(order, 6, -1)).toBe(0)
+    expect(neighbour(order, 3, -1)).toBeNull()
   })
 })
 

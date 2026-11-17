@@ -91,3 +91,23 @@ select {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* Moving between the two sites: fade out before leaving, fade in on arriving (see siteSwitch.ts). */
+html {
+  background: var(--bg);
+}
+
+html.is-leaving body {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+html.is-arriving body {
+  animation: arrive 360ms ease both;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}

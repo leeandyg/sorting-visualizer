@@ -201,3 +201,24 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Moving between the two sites: fade out before leaving, fade in on arriving (see siteSwitch.ts). */
+/* The page behind the fading body, so the fade is to the site's own dark, not white. */
+html {
+  background: var(--shell);
+}
+
+html.is-leaving body {
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+html.is-arriving body {
+  animation: arrive 360ms ease both;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+  }
+}

@@ -11,6 +11,9 @@ Live at https://sorting.andygl.com.
 
 Algorithms: bubble, selection, insertion, merge, quick (Lomuto and Hoare partitions), heap.
 
+The title in the top left opens a menu to switch to [Sortify](../sortify), the music-player version,
+which picks up with the same algorithm, array, step, speed and code language.
+
 ## How it works
 
 Each algorithm runs once and records a trace: every comparison, swap and write as a step, along

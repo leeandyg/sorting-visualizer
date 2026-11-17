@@ -1,0 +1,68 @@
+.site-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 12px 0 6px;
+  border: none;
+  border-radius: 24px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.site-button:hover,
+.site-button[aria-expanded='true'] {
+  background: var(--raised);
+}
+
+.site-name {
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.site-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 300px;
+}
+
+.site-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-option > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.site-option small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+a.site-option:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.site-option.is-current > svg:last-child {
+  color: var(--accent);
+}
+
+/* Under 1100px the name would crowd the array field; the logo alone still opens the menu. */
+@media (max-width: 1099px) {
+  .site-name {
+    display: none;
+  }
+}

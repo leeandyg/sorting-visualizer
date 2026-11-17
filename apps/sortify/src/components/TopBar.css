@@ -7,14 +7,9 @@
   padding: 0 12px 0 20px;
 }
 
-.logo-button {
+/* The site switcher sits at the start of the bar. */
+.top-bar > .popover-anchor:first-child {
   justify-self: start;
-  display: grid;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: none;
-  cursor: pointer;
 }
 
 .top-center {

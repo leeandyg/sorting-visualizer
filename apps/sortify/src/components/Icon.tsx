@@ -93,6 +93,14 @@ const ICONS = {
     </>
   ),
   /** Four corners pointing out (open the stage) and in (leave it). */
+  /** A die: "roll a new array". Shuffle's crossed arrows mean play order, as in any music app. */
+  dice: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3.5" {...stroke} />
+      <path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" {...stroke} strokeWidth={2.4} />
+    </>
+  ),
+  reset: <path d="M5.5 12a6.5 6.5 0 1 0 2-4.7M4.5 4.5v4h4" {...stroke} />,
   fullscreen: <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" {...stroke} />,
   exitFullscreen: <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" {...stroke} />,
 } satisfies Record<string, ReactNode>

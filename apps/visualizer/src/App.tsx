@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { algorithmFamilies, type AlgorithmId, algorithms, duplicateTags, generate, ident, type Lang, LANGS, type Level, type MarkKind, MAX_SIZE, narrate, parseArray, playDone, playTones, record, type Shape, SHAPES, type SortEvent, tonesFor, type Trace } from '@sortviz/core'
+import { algorithmFamilies, type AlgorithmId, algorithms, duplicateTags, generate, handoffUrl, ident, type Lang, LANGS, type Level, type MarkKind, MAX_SIZE, narrate, parseArray, playDone, playTones, readHandoff, record, type Shape, SHAPES, type SortEvent, sites, tonesFor, type Trace } from '@sortviz/core'
 import { ArrayInput } from './components/ArrayInput'
 import { ArrayView } from './components/ArrayView'
 import { CodePanel } from './components/CodePanel'
 import { InfoCard } from './components/InfoCard'
 import { HeapTree } from './components/HeapTree'
 import { PlayerControls } from './components/PlayerControls'
-import { nextSpeed, usePlayer, type Player } from './player/usePlayer'
+import { SiteSwitcher } from './components/SiteSwitcher'
+import { MAX_SPEED, MIN_SPEED, nextSpeed, usePlayer, type Player } from './player/usePlayer'
+import { initSiteSwitch } from './settings/siteSwitch'
 import { readUrlState, urlFor } from './settings/urlState'
 import { useStoredChoice } from './settings/useStoredChoice'
 import { useTheme, type ThemeChoice } from './theme/theme'
@@ -15,6 +17,9 @@ import './App.css'
 const DEFAULT_INPUT = [5, 2, 9, 1, 6, 3, 8, 4]
 /** Algorithm, array and step from a shared link, read once on load. */
 const fromUrl = readUrlState(window.location.search)
+/** Speed and play state, when the link came from Sortify's site switcher. */
+const handoff = readHandoff(window.location.search, MIN_SPEED, MAX_SPEED)
+initSiteSwitch(handoff.arrived, handoff.lang && ['code-lang', handoff.lang])
 
 function App() {
   const [algorithmId, setAlgorithmId] = useState<AlgorithmId>(fromUrl.algorithm ?? 'bubble')
@@ -36,7 +41,7 @@ function App() {
   )
 
   const trace = useMemo(() => record(algorithms[algorithmId], input), [algorithmId, input])
-  const player = usePlayer(trace.frames.length, fromUrl.step)
+  const player = usePlayer(trace.frames.length, fromUrl.step, handoff.speed, handoff.playing)
   const frame = trace.frames[player.index]
   const algorithm = algorithms[algorithmId]
   const narration = narrate(trace, player.index, level, lang)
@@ -112,6 +117,17 @@ function App() {
     player.reset(false)
   }
 
+  /** Back to the array the site starts with. */
+  const atDefault = input.join() === DEFAULT_INPUT.join()
+  const resetArray = () => {
+    setText(DEFAULT_INPUT.join(', '))
+    setInput(DEFAULT_INPUT)
+    setSize(DEFAULT_INPUT.length)
+    setGenerated(null)
+    setError(null)
+    player.reset(false)
+  }
+
   const chooseAlgorithm = (id: AlgorithmId) => {
     setAlgorithmId(id)
     player.reset(false)
@@ -123,7 +139,16 @@ function App() {
   return (
     <main className="app">
       <header className="app-header">
-        <h1>Sorting Visualizer</h1>
+        <SiteSwitcher
+          href={handoffUrl(sites.sortify.url, {
+            algorithm: algorithmId,
+            input,
+            step: player.index,
+            speed: player.speed,
+            playing: player.playing,
+            lang,
+          })}
+        />
         <ThemeSwitcher choice={theme.choice} onChange={theme.setChoice} />
       </header>
 
@@ -200,6 +225,18 @@ function App() {
             <SizeInput size={size} onChange={setSize} />
             <button type="button" className={generateReady ? 'button small generate is-ready' : 'button small generate'} onClick={randomize}>
               Generate
+            </button>
+            <button
+              type="button"
+              className="reset-array"
+              onClick={resetArray}
+              disabled={atDefault}
+              aria-label="Back to the starting array"
+              title={atDefault ? 'This is the starting array' : 'Back to the starting array'}
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <path d="M5.5 12a6.5 6.5 0 1 0 2-4.7M4.5 4.5v4h4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
           </div>
         </div>

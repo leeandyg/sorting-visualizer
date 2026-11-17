@@ -124,13 +124,6 @@ export function Sidebar({ current, playing, albumOpen, onOpenAlbum, onPlayTrack 
         {!nested && showSongs && <li>{songs}</li>}
       </ul>
 
-      <div className="sidebar-foot">
-        <a href="https://sorting.andygl.com" target="_blank" rel="noreferrer" title="Sorting Visualizer: the step-by-step version">
-          <Icon name="external" size={16} />
-          <span className="sidebar-label">Sorting Visualizer</span>
-        </a>
-        <small className="sidebar-label">The step-by-step version of this site</small>
-      </div>
     </nav>
   )
 }

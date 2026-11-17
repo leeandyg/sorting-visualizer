@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { algorithmInfo, algorithms, generate, type Lang, LANGS, parseArray, playTones, record, setVolume, type Shape, SHAPES } from '@sortviz/core'
+import { algorithmInfo, algorithms, generate, handoffUrl, type Lang, LANGS, parseArray, playTones, readHandoff, record, setVolume, type Shape, SHAPES, sites } from '@sortviz/core'
 import { AlbumView, type TrackStats } from './components/AlbumView'
 import { AlbumArt, CoverArt } from './components/CoverArt'
 import { CoverLightbox } from './components/CoverLightbox'
@@ -9,10 +9,11 @@ import { PlaybackBar } from './components/PlaybackBar'
 import { Sidebar } from './components/Sidebar'
 import { type Captions, StageView } from './components/StageView'
 import { TopBar } from './components/TopBar'
-import { ALBUM, albumYears, artistsOf, upNextIndex } from './library/catalog'
+import { ALBUM, albumYears, artistsOf, IN_ORDER, neighbour, shuffledOrder, upNextIndex } from './library/catalog'
 import { useKeyboardShortcuts } from './playback/useKeyboardShortcuts'
-import { usePlayer } from './playback/usePlayer'
+import { MAX_SPEED, MIN_SPEED, usePlayer } from './playback/usePlayer'
 import { useStepSound } from './playback/useStepSound'
+import { initSiteSwitch } from './settings/siteSwitch'
 import { readUrlState, urlFor } from './settings/urlState'
 import { useLikedArrays, useStoredNumber } from './settings/useStored'
 import { useStoredChoice } from './settings/useStoredChoice'
@@ -25,6 +26,9 @@ const DEFAULT_INPUT = [42, 17, 68, 9, 85, 31, 56, 24, 73, 12, 94, 38, 61, 5, 79,
 /** Algorithm, array and step from a shared link, read once on load. */
 const fromUrl = readUrlState(window.location.search)
 const linkedTrack = ALBUM.tracks.findIndex((track) => track.id === fromUrl.algorithm)
+/** Speed and play state, when the link came from the Sorting Visualizer's site switcher. */
+const handoff = readHandoff(window.location.search, MIN_SPEED, MAX_SPEED)
+initSiteSwitch(handoff.arrived, handoff.lang && ['sortify-lang', handoff.lang])
 /** How long a finished song holds its last frame before the next one starts, and before a repeat. */
 const UP_NEXT_MS = 4000
 const REPEAT_MS = 1500
@@ -39,8 +43,12 @@ function App() {
   const [shape, setShape] = useState<Shape>('random')
   const [error, setError] = useState<string | null>(null)
   // You always land on the album, even from a link to a song (the song is loaded, ready to play).
+  // The one exception: switching over from the Sorting Visualizer opens the stage, so the sort
+  // you were watching is still in front of you.
   // Views are kept as a trail so the ‹ › buttons can walk it, like pages in a music app.
-  const [views, setViews] = useState(() => startHistory<View>('album'))
+  const [views, setViews] = useState(() =>
+    handoff.arrived ? visit(startHistory<View>('album'), 'stage') : startHistory<View>('album'),
+  )
   const view = current(views)
   const setView = (next: View) => setViews((h) => visit(h, next))
   // The view the lyrics cover, so closing them goes back to where you were.
@@ -51,6 +59,9 @@ function App() {
   const [captions, setCaptions] = useStoredChoice<Captions>('sortify-captions', ['beginner', 'expert', 'off'], 'beginner')
   const [sound, setSound] = useStoredChoice<'on' | 'off'>('sortify-sound', ['on', 'off'], 'on')
   const [repeat, setRepeat] = useStoredChoice<'on' | 'off'>('sortify-repeat', ['on', 'off'], 'off')
+  const [shuffle, setShuffle] = useStoredChoice<'on' | 'off'>('sortify-shuffle', ['on', 'off'], 'off')
+  // The order songs follow one another in: the album's, or a shuffled one starting from the loaded song.
+  const [order, setOrder] = useState(() => (shuffle === 'on' ? shuffledOrder(Math.max(linkedTrack, 0)) : IN_ORDER))
   const [volume, setVolumeLevel] = useStoredNumber('sortify-volume', 0.8, 0, 1)
   const [lang, setLang] = useStoredChoice<Lang>(
     'sortify-lang',
@@ -72,7 +83,7 @@ function App() {
       }),
     [input],
   )
-  const player = usePlayer(trace.frames.length, fromUrl.step)
+  const player = usePlayer(trace.frames.length, fromUrl.step, handoff.speed, handoff.playing)
   const frame = trace.frames[player.index]
   const maxValue = Math.max(...input, 1)
 
@@ -117,8 +128,9 @@ function App() {
 
   const previousTrack = () => {
     // Like a music player: a few steps in, "previous" restarts the song; right at the start, it goes back one.
-    if (player.index > 3 || trackIndex === 0) player.reset(true)
-    else playTrack(trackIndex - 1, false)
+    const before = neighbour(order, trackIndex, -1)
+    if (player.index > 3 || before === null) player.reset(true)
+    else playTrack(before, false)
   }
 
   const openLyrics = () => {
@@ -128,7 +140,8 @@ function App() {
   }
   const toggleLyrics = () => (view === 'lyrics' ? setView(behindLyrics) : openLyrics())
 
-  const nextTrack = () => playTrack((trackIndex + 1) % ALBUM.tracks.length, false)
+  // Past the last song in the play order, Next wraps round to the first.
+  const nextTrack = () => playTrack(neighbour(order, trackIndex, 1) ?? order[0], false)
 
   const loadArray = (values: number[]) => {
     setInput(values)
@@ -137,7 +150,15 @@ function App() {
     player.reset(true)
   }
 
-  const shuffle = () => loadArray(generate(shape, size))
+  const newArray = () => loadArray(generate(shape, size))
+  const atDefault = input.join() === DEFAULT_INPUT.join()
+
+  /** Shuffle is the music-player kind: it changes which song comes next, not the array. */
+  const toggleShuffle = () => {
+    const next = shuffle === 'on' ? 'off' : 'on'
+    setShuffle(next)
+    setOrder(next === 'on' ? shuffledOrder(trackIndex) : IN_ORDER)
+  }
 
   /** Plays the array typed in the top bar. */
   const run = (e?: FormEvent) => {
@@ -179,7 +200,7 @@ function App() {
   useStepSound(sound === 'on', trace, player.index, maxValue)
 
   // When a song plays through to its end, the next one (or the same one, on repeat) starts after a pause.
-  const nextIndex = upNextIndex(trackIndex, repeat === 'on')
+  const nextIndex = upNextIndex(trackIndex, repeat === 'on', order)
   const advance = () => {
     if (nextIndex === null) return
     if (nextIndex !== trackIndex) setTrackIndex(nextIndex)
@@ -200,8 +221,18 @@ function App() {
 
   // Slides take most of a step at slow speeds; past ~30 steps/s they'd only lag, so snap instead.
   const moveMs = player.speed >= 30 ? 0 : Math.min(350, 700 / player.speed)
-  const following = trackIndex + 1 < ALBUM.tracks.length ? ALBUM.tracks[trackIndex + 1] : null
+  const followingIndex = neighbour(order, trackIndex, 1)
+  const following = followingIndex === null ? null : ALBUM.tracks[followingIndex]
   const shapeLabel = SHAPES.find((s) => s.id === shape)!.label.toLowerCase()
+  const newArrayMakes = `${shapeLabel}, ${size} values`
+  const switchHref = handoffUrl(sites.visualizer.url, {
+    algorithm: track.id,
+    input,
+    step: player.index,
+    speed: player.speed,
+    playing: player.playing,
+    lang,
+  })
 
   return (
     <div className="app">
@@ -212,7 +243,18 @@ function App() {
         onSubmit={run}
         onHome={() => setView('album')}
         atHome={view === 'album'}
-        settings={{ shape, size, onShape: setShape, onSize: setSize, onShuffle: shuffle, liked: likes.liked, onLoad: loadArray }}
+        settings={{
+          shape,
+          size,
+          onShape: setShape,
+          onSize: setSize,
+          onNewArray: newArray,
+          onReset: atDefault ? undefined : () => loadArray(DEFAULT_INPUT),
+          liked: likes.liked,
+          onLoad: loadArray,
+        }}
+        newArrayMakes={newArrayMakes}
+        switchHref={switchHref}
       />
 
       <Sidebar
@@ -231,7 +273,10 @@ function App() {
           arraySize={input.length}
           onTogglePlay={() => (player.playing ? player.pause() : playTrack(trackIndex, true))}
           onPlayTrack={(index) => playTrack(index, true)}
-          onShuffle={shuffle}
+          shuffle={shuffle === 'on'}
+          onToggleShuffle={toggleShuffle}
+          onNewArray={newArray}
+          newArrayMakes={newArrayMakes}
           onOpenCover={() => setBigCover('album')}
         />
       ) : view === 'lyrics' ? (
@@ -318,8 +363,8 @@ function App() {
         frameCount={trace.frames.length}
         onPreviousTrack={previousTrack}
         onNextTrack={nextTrack}
-        onShuffle={shuffle}
-        shuffleMakes={`${shapeLabel}, ${size} values`}
+        shuffle={shuffle === 'on'}
+        onToggleShuffle={toggleShuffle}
         repeat={repeat === 'on'}
         onToggleRepeat={() => setRepeat(repeat === 'on' ? 'off' : 'on')}
         liked={likes.isLiked(input)}

@@ -4,24 +4,39 @@ import { Icon } from './Icon'
 import { Slider } from './Slider'
 import './ArrayOptions.css'
 
-export interface ShuffleSettings {
+export interface ArraySettings {
   shape: Shape
   size: number
   onShape: (shape: Shape) => void
   onSize: (size: number) => void
   /** Makes a fresh array from the settings and plays it. */
-  onShuffle: () => void
+  onNewArray: () => void
+  /** Goes back to the array the site starts with; undefined while that one is already loaded. */
+  onReset?: () => void
   /** Arrays saved with the heart, newest first. */
   liked: number[][]
   onLoad: (values: number[]) => void
 }
 
-/** What Shuffle makes: the kind of array and how many values. Shown in a popover; `close` shuts it. */
-export function ArrayOptions({ settings, close }: { settings: ShuffleSettings; close: () => void }) {
-  const { shape, size, onShape, onSize, onShuffle, liked, onLoad } = settings
+/** What a new array is made of: the kind of array and how many values. Shown in a popover; `close` shuts it. */
+export function ArrayOptions({ settings, close }: { settings: ArraySettings; close: () => void }) {
+  const { shape, size, onShape, onSize, onNewArray, onReset, liked, onLoad } = settings
   return (
     <div className="array-options">
-      <h3>Shuffle makes</h3>
+      <h3>New array</h3>
+      <button
+        type="button"
+        className="icon-button array-reset"
+        disabled={!onReset}
+        onClick={() => {
+          onReset?.()
+          close()
+        }}
+        aria-label="Back to the starting array"
+        title={onReset ? 'Back to the starting array' : 'This is the starting array'}
+      >
+        <Icon name="reset" size={18} />
+      </button>
       <div className="shape-chips" role="group" aria-label="Kind of array">
         {SHAPES.map((option) => (
           <button key={option.id} type="button" aria-pressed={option.id === shape} onClick={() => onShape(option.id)}>
@@ -38,12 +53,12 @@ export function ArrayOptions({ settings, close }: { settings: ShuffleSettings; c
         type="button"
         className="pill accent shuffle-now"
         onClick={() => {
-          onShuffle()
+          onNewArray()
           close()
         }}
       >
-        <Icon name="shuffle" size={16} />
-        Shuffle and play
+        <Icon name="dice" size={16} />
+        Roll and play
       </button>
 
       {liked.length > 0 && (

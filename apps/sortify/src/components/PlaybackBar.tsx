@@ -13,9 +13,9 @@ interface Props {
   frameCount: number
   onPreviousTrack: () => void
   onNextTrack: () => void
-  onShuffle: () => void
-  /** What Shuffle makes right now, for its tooltip (e.g. "random, 16 values"). */
-  shuffleMakes: string
+  /** Songs play in a random order. */
+  shuffle: boolean
+  onToggleShuffle: () => void
   repeat: boolean
   onToggleRepeat: () => void
   liked: boolean
@@ -107,7 +107,16 @@ export function PlaybackBar(props: Props) {
               )}
             </Popover>
           </div>
-          <Control icon="shuffle" label={`Shuffle: play a new array (${props.shuffleMakes})`} onClick={props.onShuffle} />
+          <button
+            type="button"
+            className={props.shuffle ? 'icon-button has-dot is-on' : 'icon-button has-dot'}
+            onClick={props.onToggleShuffle}
+            aria-pressed={props.shuffle}
+            aria-label="Shuffle the songs"
+            title={props.shuffle ? 'Shuffle is on: songs play in a random order' : 'Shuffle the songs'}
+          >
+            <Icon name="shuffle" />
+          </button>
           <Control icon="previous" label="Previous song" onClick={props.onPreviousTrack} />
           <Control icon="stepBack" label="Step back (←, Shift+← for 5)" onClick={player.stepBack} />
           <button

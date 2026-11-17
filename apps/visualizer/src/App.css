@@ -47,10 +47,6 @@
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
 }
 
-.app-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
 
 /* Input panel */
 
@@ -119,6 +115,30 @@
   border-color: var(--border-strong);
   color: var(--ready-text);
   box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+/* A quiet circular arrow after Generate: back to the array the site starts with. */
+.reset-array {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.reset-array:hover:not(:disabled) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.reset-array:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* Reads as plain text until clicked, then edits like a field. */
