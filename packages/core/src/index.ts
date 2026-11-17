@@ -42,3 +42,4 @@ export { parseArray, MAX_VALUE, type ParseResult } from './input/parseArray'
 
 // Sound
 export { playTones, playDone, tonesFor, valueToFrequency, setVolume, getVolume, NOTE_MS } from './sound/sound'
+export { type Handoff, handoffUrl, readHandoff, type SiteId, sites } from './sites'
