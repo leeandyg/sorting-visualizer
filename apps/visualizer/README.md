@@ -1,4 +1,5 @@
-# Sorting Visualizer
+
+# <img width="32" height="32" alt="favicon" src="./public/favicon.svg" /> Sorting Visualizer
 
 Step-by-step animations of common sorting algorithms, with plain-English narration and the matching
 line of code highlighted in Python, JavaScript, Java or C++. Built to be a crash course for beginners
